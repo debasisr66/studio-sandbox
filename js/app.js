@@ -104,6 +104,7 @@ async function boot() {
   if (followBlogLink()) showId('podcasts');
   if (RL.isReadsHash(location.hash) && location.hash !== '#reads') showReads();   // '#reads/others' matches no element id, so the browser cannot scroll to it
   if (tokenStore.get()) enableAdmin();   // always reached: renderAll never throws
+  if (RL.isAddHash(location.hash)) openAdd();   // the Home Screen entry (QA-08)
 }
 
 /* ---------- render: products, updates ---------- */
@@ -354,13 +355,14 @@ const io = new IntersectionObserver(es => es.forEach(e => {
 document.querySelectorAll('section.block').forEach(s => io.observe(s));
 
 /* ---------- admin: GitHub contents API ---------- */
-const ghApi = (path, opts = {}) => fetch('https://api.github.com' + path, {...opts, headers: {
+const ghApi = (path, opts = {}) => fetch('https://api.github.com' + path, {...(typeof AbortSignal.timeout === 'function' ? {signal: AbortSignal.timeout(20000)} : {}), ...opts, headers: {
   Accept: 'application/vnd.github+json', Authorization: 'Bearer ' + tokenStore.get(), ...(opts.headers || {})}});
 const b64enc = s => { const b = new TextEncoder().encode(s); let bin = ''; b.forEach(x => bin += String.fromCharCode(x)); return btoa(bin); };
 const b64dec = s => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\s/g, '')), c => c.charCodeAt(0)));
 
 /* GET current sha -> validate -> skip if unchanged -> PUT with sha. One file per commit. */
 async function publishFile(path, obj, message, guard) {
+  if (guard && snap[path] === undefined) throw new Error(path + ': this page has not finished loading it (or could not), so nothing was written. Reload the page and try again.');   // review QA-A F1: boot sets 'absent' or the loaded text for every known state
   let text;
   try { text = JSON.stringify(JSON.parse(JSON.stringify(obj)), null, 2) + '\n'; }
   catch (e) { throw new Error('Refusing to publish ' + path + ': invalid JSON (' + e.message + ')'); }
@@ -404,7 +406,7 @@ const onActivity = () => { if (document.body.classList.contains('admin')) idle.a
 ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, onActivity, {passive: true}));
 
 function enableAdmin() { document.body.classList.add('admin'); updateDirty(); idle.arm(); }
-function lock() { tokenStore.del(); document.body.classList.remove('admin'); idle.disarm(); closeComposer(); closePodcastComposer(); }
+function lock(keepForms) { tokenStore.del(); document.body.classList.remove('admin'); idle.disarm(); if (!keepForms) { closeComposer(); closePodcastComposer(); } }   // after a publish the forms are kept (they are hidden while locked): review QA-A F5
 function updateDirty() {
   const LABEL = {podcasts: 'podcasts.json', reads: 'reads.json', profile: 'profile photo'};
   const d = Object.entries(state.dirty).filter(([,v]) => v).map(([k]) => LABEL[k] || k);
@@ -442,27 +444,9 @@ document.addEventListener('keydown', e => {
   else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
 });
 
-$('#gear').onclick = () => {
-  if (document.body.classList.contains('admin')) { say('Admin mode is on. Use "Lock & sign out" at the bottom to leave it.'); return; }
-  modal.open(`<h3 id="modalTitle">Admin access</h3>
-    <p class="muted-sm">Paste a GitHub personal access token with write access to <span class="mono">${OWNER}/${HUB}</span>. It stays in this tab only and is forgotten when you close it.</p>
-    <label for="pat">Token</label><input id="pat" type="password" autocomplete="off" placeholder="github_pat_…">
-    <div class="btns"><button type="button" class="cta ghost" id="mc">Cancel</button><button type="button" class="cta" id="mu">Unlock</button></div>`);
-  $('#mc').onclick = modal.close;
-  const go = async () => {
-    const pat = $('#pat').value.trim(); if (!pat) return modal.err('Paste your token to continue.');
-    $('#mu').disabled = true;
-    try {
-      const r = await fetch('https://api.github.com/user', {headers: {Authorization: 'Bearer ' + pat, Accept: 'application/vnd.github+json'}});
-      if (!r.ok) throw new Error('GitHub rejected the token (' + r.status + '). Check it has not expired.');
-      const u = await r.json();
-      if (u.login !== OWNER) throw new Error('This token belongs to "' + u.login + '", but admin is limited to "' + OWNER + '".');
-      tokenStore.set(pat); modal.close(); enableAdmin(); say('Admin unlocked.');
-    } catch (e) { modal.err(e.message); $('#mu').disabled = false; }
-  };
-  $('#mu').onclick = go;
-  $('#pat').onkeydown = e => { if (e.key === 'Enter') go(); };
-};
+/* The gear opens the Add to Studio sheet (SPEC-QA QA-01); the token is asked for when something is posted (see askToken below). */
+$('#gear').onclick = () => openAdd();
+$('#addOpen').onclick = () => openAdd();
 $('#lockBtn').onclick = () => {
   if (Object.values(state.dirty).some(Boolean) && !confirm('You have unpublished changes. Sign out anyway? (Changes stay on this page until you reload.)')) return;
   lock(); say('Admin locked.');
@@ -679,23 +663,29 @@ document.addEventListener('click', async e => {
 $('#readSearch').addEventListener('input', e => { state.filter.q = e.target.value; renderReads(); });
 $('#podcastSearch').addEventListener('input', e => { state.pfilter.q = e.target.value; renderPodcasts(); });
 
+/* Every write of reads.json or podcasts.json goes through here (Publish changes and Quick add): the same refusals, then the guarded publishFile. Throws Error(message). */
+const CONTENT_FILES = { podcasts: ['content/podcasts.json', 'podcasts'], reads: ['content/reads.json', 'reading list'] };
+async function publishContent(key, data) {
+  const [path, label] = CONTENT_FILES[key];
+  if ((key === 'podcasts' && state.podcastsFailed) || (key === 'reads' && state.readsFailed)) throw new Error('not published: it could not be loaded when this page opened, so its content is unknown (reload the page)');
+  if (key === 'podcasts') {   // the same rules CI applies, before anything is written: a bad entry already in the file blocks the publish
+    const bad = RL.validatePodcastsFile(data).errors;
+    if (bad.length) throw new Error('not published: ' + bad[0] + (bad.length > 1 ? ` (and ${bad.length - 1} more)` : ''));
+  }
+  if ((key === 'podcasts' && state.podcastsUnsupported) || (key === 'reads' && state.readsUnsupported)) throw new Error('not published: this file is newer than the page understands (reload the page)');
+  return publishFile(path, data, `cms: update ${label}`, true);
+}
 $('#publishBtn').onclick = async () => {
-  const files = [['podcasts', 'content/podcasts.json', () => RL.serializePodcasts(state.podcasts), 'podcasts'], ['reads', 'content/reads.json', () => RL.serializeReads(state.reads), 'reading list']];
+  const files = [['podcasts', () => RL.serializePodcasts(state.podcasts)], ['reads', () => RL.serializeReads(state.reads)]];
   const todo = files.filter(f => state.dirty[f[0]]);
   const hasPhoto = !!(state.dirty.profile && state.profileDraft);
   if (!todo.length && !hasPhoto) return;
   $('#publishBtn').disabled = true;
-  const out = [];
-  for (const [key, path, get, label] of todo) {   // one file per commit; a failure leaves the others untouched
-    if ((key === 'podcasts' && state.podcastsFailed) || (key === 'reads' && state.readsFailed)) { out.push(path + ': not published: it could not be loaded when this page opened, so its content is unknown (reload the page)'); continue; }
-    if (key === 'podcasts') {   // the same rules CI applies, before anything is written: a bad entry already in the file blocks the publish
-      const bad = RL.validatePodcastsFile(get()).errors;
-      if (bad.length) { out.push(path + ': not published: ' + bad[0] + (bad.length > 1 ? ` (and ${bad.length - 1} more)` : '')); continue; }
-    }
-    if (key === 'podcasts' && state.podcastsUnsupported) { out.push(path + ': not published: this file is newer than the page understands (reload the page)'); continue; }
-    if (key === 'reads' && state.readsUnsupported) { out.push(path + ': not published: this file is newer than the page understands (reload the page)'); continue; }
-    try { const r = await publishFile(path, get(), `cms: update ${label}`, key === 'podcasts' || key === 'reads'); state.dirty[key] = false; out.push(path + ': ' + r); }
-    catch (e) { out.push(path + ': ' + e.message); }
+  const out = []; let failed = false;
+  for (const [key, get] of todo) {   // one file per commit; a failure leaves the others untouched
+    const path = CONTENT_FILES[key][0];
+    try { const r = await publishContent(key, get()); state.dirty[key] = false; out.push(path + ': ' + r); }
+    catch (e) { failed = true; out.push(path + ': ' + e.message); }
   }
   if (hasPhoto) {   // photo first, then the manifest that shows it, so the manifest never points at a missing file
     try {
@@ -705,11 +695,12 @@ $('#publishBtn').onclick = async () => {
       const r2 = await publishFile('content/profile.json', {photo: 'content/profile.jpg', updated}, 'cms: show profile photo');
       state.profile = {photo: 'content/profile.jpg', updated}; state.profileShown = state.profileDraft.dataUrl; state.profileDraft = null; state.dirty.profile = false;
       out.push('content/profile.jpg: ' + r1, 'content/profile.json: ' + r2);
-    } catch (e) { out.push('profile photo: ' + e.message); }
+    } catch (e) { failed = true; out.push('profile photo: ' + e.message); }
   }
   updateDirty();
-  modal.open('<h3 id="modalTitle">Publish result</h3><pre class="mono pre-result">' + esc(out.join('\n')) + '</pre><p class="muted-xs">GitHub Pages usually reflects changes within a minute or two.</p><div class="btns"><button type="button" class="cta" id="mc">Close</button></div>');
+  modal.open('<h3 id="modalTitle">Publish result</h3><pre class="mono pre-result">' + esc(out.join('\n')) + '</pre><p class="muted-xs">GitHub Pages usually reflects changes within a minute or two.' + (failed ? '' : ' Admin locked again (SPEC-QA QA-06).') + '</p><div class="btns"><button type="button" class="cta" id="mc">Close</button></div>');
   $('#mc').onclick = modal.close;
+  if (!failed) { lock(true); say('Published and locked.'); }   // QA-06: the admin never stays open after a successful publish; a failure keeps it open with the error
 };
 window.addEventListener('beforeunload', e => { if (Object.values(state.dirty).some(Boolean)) { e.preventDefault(); e.returnValue = ''; } });
 
@@ -754,6 +745,186 @@ $('#photoFile').addEventListener('change', async e => {
   if (!f) return;
   try { openPhotoPreview(await processPhoto(f)); } catch (err) { showPhotoError(err.message); }
 });
+
+/* ---------- Quick add (SPEC-QA QA-01 … QA-08): paste first, unlock when needed, post and publish, lock ---------- */
+/* The one owner-only draft key (QA-07): this tab's sessionStorage (memory-only if blocked), five text fields, never the token (RL.serializeDraft). */
+const DRAFT_KEY = 'studio-quick-draft';
+const draftStore = window.TokenStore.create(() => window.sessionStorage, DRAFT_KEY);
+const qa = { busy: false, kindTouched: false, back: null, tokBack: null, tokDone: null };
+const qf = id => $('#qa-' + id);
+const QA_FIELDS = ['url', 'title', 'show', 'comment', 'category'];
+const today = () => new Date().toISOString().slice(0, 10);
+const qaKind = () => { const r = $('#qa-kind input:checked'); return r ? r.value : 'read'; };
+const qaSection = () => { const r = $('#qa-section-opts input:checked'); return r ? r.value : ''; };
+function qaRenderSections(value) {
+  $('#qa-section-opts').innerHTML = RL.CATEGORIES.map(c => `<label class="radio"><input type="radio" name="qa-section" value="${esc(c)}"${c === value ? ' checked' : ''}> ${esc(RL.categoryLabel(c))}</label>`).join('');
+}
+function qaSetKind(k) { $('#qa-kind input[value="' + (k === 'podcast' ? 'podcast' : 'read') + '"]').checked = true; qaShowKind(); }
+function qaShowKind() { const k = qaKind(); $('#qa-read-fields').hidden = k !== 'read'; $('#qa-pod-fields').hidden = k !== 'podcast'; }
+function qaDest() { const n = RL.normalizeUrl(qf('url').value); $('#qa-dest').textContent = n ? 'Destination: ' + RL.domainOf(n) : ''; return n; }
+function qaCount() { const n = qf('comment').value.length, c = $('#qa-count'); c.textContent = n; c.parentElement.classList.toggle('bad', n > RL.LIMITS.comment); }
+function qaSave() {
+  const s = RL.serializeDraft({url: qf('url').value, title: qf('title').value, comment: qf('comment').value, tags: qf('tags').value, kind: qaKind()});
+  if (s) draftStore.set(s); else draftStore.del();
+}
+function qaClearErrors() {
+  QA_FIELDS.forEach(f => { const e = $('#qa-' + f + '-err'); if (e) e.textContent = ''; const i = qf(f); if (i) i.removeAttribute('aria-invalid'); });
+  $('#qa-msg').textContent = ''; $('#qa-note').textContent = '';
+}
+function qaShowErrors(errors) {
+  qaClearErrors();
+  QA_FIELDS.forEach(f => { if (errors[f]) { $('#qa-' + f + '-err').textContent = errors[f]; const i = qf(f); if (i) i.setAttribute('aria-invalid', 'true'); } });
+  const first = QA_FIELDS.find(f => errors[f]);
+  if (first) (first === 'category' ? $('#qa-section-opts input') : qf(first)).focus();
+}
+function qaBusy(on) {
+  qa.busy = on; $('#addSheet').setAttribute('aria-busy', String(on));
+  if (on) $('#addTitle').focus();   // the focused button is about to be disabled: keep the focus inside the dialog (review QA-A F7)
+  ['qa-paste', 'qa-draft', 'qa-publish', 'qa-cancel', 'qa-unlock'].forEach(id => { $('#' + id).disabled = on; });
+  if (!on && $('#addBg').classList.contains('open') && document.activeElement === $('#addTitle')) $('#qa-publish').focus();
+}
+function openAdd() {
+  if ($('#addBg').classList.contains('open')) { qf('url').focus(); return; }
+  qa.warned = '';
+  qa.back = document.activeElement;
+  const d = RL.parseDraft(draftStore.get());
+  qf('url').value = d ? d.url : ''; qf('title').value = d ? d.title : ''; qf('comment').value = d ? d.comment : ''; qf('tags').value = d ? d.tags : ''; qf('show').value = ''; qf('type').value = 'article';
+  qa.kindTouched = !!(d && d.kind);
+  qaRenderSections(defaultSection());
+  qaSetKind(d && d.kind ? d.kind : RL.suggestKind(RL.normalizeUrl(qf('url').value)));
+  qaClearErrors(); qaCount(); qaDest(); qaBusy(false);
+  $('#qa-unlock').hidden = document.body.classList.contains('admin');
+  $('#addBg').classList.add('open'); qf('url').focus();
+}
+/* clear = true for Cancel, Escape and success (the draft is dropped); false to keep it (unlock-only) */
+function closeAdd(clear) {
+  $('#addBg').classList.remove('open');
+  if (clear) draftStore.del();
+  if (RL.isAddHash(location.hash)) { try { history.replaceState(null, '', location.pathname + location.search); } catch {} }   // so a reload does not reopen it, and a later #add is a change the page sees
+  if (qa.back && document.contains(qa.back)) qa.back.focus(); qa.back = null;
+}
+/* a link arrived from the clipboard (the Paste button, or a paste into the field): normalised link, destination, suggested kind, and a title when there is none yet */
+function qaTake(text) {
+  const link = RL.extractLink(text);
+  if (!link) { qaShowErrors({url: 'Enter a valid web address starting with http:// or https://'}); return false; }
+  qaClearErrors(); qf('url').value = link; qa.kindTouched = false; qaDest(); qaSetKind(RL.suggestKind(link));
+  if (!qf('title').value.trim()) qf('title').value = RL.extractTitle(text);
+  qaSave(); return true;
+}
+$('#qa-paste').onclick = async () => {   // the ONLY place the clipboard is read: inside the tap, so the browser's own paste confirmation applies
+  let t = '';
+  try { t = await navigator.clipboard.readText(); } catch { return qaShowErrors({url: 'Could not read the clipboard. Press and hold in the Link field and choose Paste.'}); }
+  qaTake(t);
+};
+qf('url').addEventListener('paste', e => {   // a paste by hand: share text with a link is handled like the button; anything else is typed in as it comes
+  const t = e.clipboardData && e.clipboardData.getData('text/plain');
+  if (t && RL.extractLink(t) && qaTake(t)) e.preventDefault();
+});
+$('#addForm').addEventListener('input', e => {
+  if (e.target.id === 'qa-url') { qaDest(); if (!qa.kindTouched) { const n = RL.normalizeUrl(qf('url').value); if (n) qaSetKind(RL.suggestKind(n)); } }
+  if (e.target.id === 'qa-comment') qaCount();
+  qaSave();
+});
+$('#qa-kind').addEventListener('change', () => { qa.kindTouched = true; qaShowKind(); qaSave(); });
+$('#addForm').addEventListener('submit', e => e.preventDefault());   // posting is always an explicit tap on one of the two buttons
+$('#qa-cancel').onclick = () => { if (!qa.busy) closeAdd(true); };
+
+/* The token prompt over the sheet (QA-04): a real login form. Resolves true once the token is accepted and the admin is on, false on Cancel. */
+function askToken(back) {   // back: the control to give the focus to afterwards (a tapped button does not always hold the focus on iOS)
+  return new Promise(resolve => {
+    qa.tokBack = back || document.activeElement; $('#addSheet').inert = true;
+    $('#tok-err').textContent = ''; $('#pat').value = ''; $('#tok-go').disabled = false;
+    $('#tokBg').classList.add('open'); $('#pat').focus();
+    qa.tokDone = ok => {
+      $('#tokBg').classList.remove('open'); $('#addSheet').inert = false; $('#pat').value = ''; $('#tok-go').disabled = false; qa.tokDone = null;
+      if (qa.tokBack && document.contains(qa.tokBack)) qa.tokBack.focus(); resolve(ok);
+    };
+  });
+}
+$('#tok-cancel').onclick = () => { if (qa.tokDone) qa.tokDone(false); };
+$('#tokForm').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  if (!qa.tokDone) return;
+  const done = qa.tokDone;
+  const pat = $('#pat').value.trim(), err = m => { $('#tok-err').textContent = m; };
+  if (!pat) return err('Paste your token to continue.');
+  $('#tok-go').disabled = true;
+  try {
+    const r = await fetch('https://api.github.com/user', {headers: {Authorization: 'Bearer ' + pat, Accept: 'application/vnd.github+json'}});
+    if (qa.tokDone !== done) return;   // Cancel (or a newer prompt) arrived while GitHub was answering: this result is stale, nothing is stored (review QA-A F2)
+    if (!r.ok) throw new Error('GitHub rejected the token (' + r.status + '). Check it has not expired.');
+    const u = await r.json();
+    if (qa.tokDone !== done) return;
+    if (u.login !== OWNER) throw new Error('This token belongs to "' + u.login + '", but admin is limited to "' + OWNER + '".');
+    tokenStore.set(pat); enableAdmin(); done(true);
+  } catch (e) { if (qa.tokDone === done) { err(e.message); $('#tok-go').disabled = false; } }
+});
+$('#qa-unlock').onclick = async () => {   // unlock without posting (to edit or delete); the draft stays
+  if (qa.busy) return;
+  if (await askToken($('#qa-unlock'))) { closeAdd(false); say('Admin unlocked.'); }
+};
+
+/* Post and publish / Post as draft. The entry is validated by the very same functions as the two composers; a publish writes the one affected file through
+   publishContent (the PC-B guards) and only then adds the entry to the page's lists, so a failed or refused publish leaves everything as it was. */
+async function qaPost(mode) {
+  if (qa.busy) return;
+  const kind = qaKind(), key = kind === 'podcast' ? 'podcasts' : 'reads';
+  qaClearErrors();
+  let entry;
+  if (kind === 'read') {
+    const r = RL.validateEntry({url: qf('url').value, title: qf('title').value, comment: qf('comment').value, kind: qf('type').value, tags: qf('tags').value, category: qaSection()}, {requireCategory: true});
+    const errors = {...r.errors};
+    if (r.ok && RL.isDuplicate(state.reads.articles, r.value.url)) errors.url = 'This link is already in your reading list.';
+    if (r.errors.kind) errors.title = errors.title || r.errors.kind;
+    if (Object.keys(errors).length) return qaShowErrors(errors);
+    entry = {id: Date.now(), added: today(), ...r.value};
+  } else {
+    if (state.podcastsUnsupported || state.podcastsFailed) return qaShowErrors({url: 'podcasts.json could not be loaded, or is newer than this page understands. Reload the page before adding.'});
+    const r = RL.validatePodcastEntry({url: qf('url').value, title: qf('title').value, show: qf('show').value, comment: qf('comment').value, tags: qf('tags').value});
+    if (!r.ok) return qaShowErrors(r.errors);
+    entry = {id: Date.now(), added: today(), ...r.value};
+  }
+  if (snap[CONTENT_FILES[key][0]] === undefined) { $('#qa-msg').textContent = CONTENT_FILES[key][0] + ': this page has not finished loading it, or it could not be loaded, so nothing was added. Reload the page and try again.'; return; }   // review QA-A N1: boot would replace the lists and the entry would vanish
+  const add = () => { if (key === 'reads') { state.reads.articles.unshift(entry); state.lastSection = entry.category; } else state.podcasts.podcasts.unshift(entry); };
+  if (!document.body.classList.contains('admin') && !(await askToken($(mode === 'draft' ? '#qa-draft' : '#qa-publish')))) return;   // QA-04: the token is asked for now; Cancel leaves the draft as it was
+  if (mode === 'draft') {
+    add(); state.dirty[key] = true; updateDirty(); closeAdd(true); renderAll(); say('Added as a draft. Use Publish changes to make it public.');
+    return;
+  }
+  if (state.dirty[key] && qa.warned !== key) {   // review QA-A F3: the file is written whole, so pending inline changes to it go public too: say so first
+    qa.warned = key; $('#qa-msg').textContent = 'This also publishes your other unpublished changes to ' + CONTENT_FILES[key][0] + ' (for example a deleted or edited item). Press Post and publish again to continue, or Post as draft.';
+    return;
+  }
+  qaBusy(true); $('#qa-note').textContent = 'Publishing…';
+  try {
+    const data = key === 'reads' ? RL.serializeReads({books: state.reads.books, articles: [entry, ...state.reads.articles]}) : RL.serializePodcasts({podcasts: [entry, ...state.podcasts.podcasts]});
+    await publishContent(key, data);
+  } catch (e) {   // stays unlocked, the sheet and the draft stay, the owner can retry
+    qaBusy(false); $('#qa-note').textContent = '';
+    $('#qa-msg').textContent = e.message + (/\((401)\)/.test(e.message) && document.body.classList.contains('admin') ? '\nGitHub did not accept the token. Use "Lock & sign out" and unlock again with a fresh one.' : '');
+    return;
+  }
+  add(); state.dirty[key] = false; updateDirty(); qaBusy(false);
+  const others = Object.values(state.dirty).some(Boolean);
+  closeAdd(true); lock(true); renderAll(); $('#gear').focus();   // QA-06: published, so the admin locks at once
+  say('Published and locked. It appears on the site in about a minute.' + (others ? ' Other unpublished changes stay on this page until you reload.' : ''));
+}
+$('#qa-publish').onclick = () => qaPost('publish');
+$('#qa-draft').onclick = () => qaPost('draft');
+
+/* focus trap and Escape for the two dialogs (the prompt sits over the sheet) */
+document.addEventListener('keydown', e => {
+  const tok = $('#tokBg').classList.contains('open'), add = $('#addBg').classList.contains('open');
+  if (!tok && !add) return;
+  if (e.key === 'Escape') { if (tok) { if (qa.tokDone) qa.tokDone(false); } else if (!qa.busy) closeAdd(true); return; }
+  if (e.key !== 'Tab') return;
+  const f = [...$(tok ? '#tokPrompt' : '#addSheet').querySelectorAll((qa.busy ? 'h3[tabindex],' : '') + 'button:not([disabled]),input,textarea,select,a[href]')].filter(x => x.offsetParent !== null);
+  if (!f.length) return;
+  const first = f[0], last = f[f.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+});
+window.addEventListener('hashchange', () => { if (RL.isAddHash(location.hash)) openAdd(); });
 
 boot();
 

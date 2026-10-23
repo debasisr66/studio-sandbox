@@ -264,3 +264,18 @@ body.admin .read-head{padding-right:112px}
 }
 .brand{white-space:nowrap}
 .hdr-actions{flex:none}
+
+/* Quick add (SPEC-QA): the Add to Studio sheet and the token prompt over it */
+#tokBg{z-index:45}
+#addSheet{max-width:520px}
+#addSheet [hidden]{display:none!important}
+#addSheet .field input+.paste-btn{margin-top:8px;width:100%}
+#addSheet .dest{margin-top:6px;min-height:1.2em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#addSheet .sect-field{margin-top:12px}
+#addSheet .form-btns .cta{flex:1 1 auto}
+#addSheet .opt{font-weight:400}
+#addSheet .err:empty,#tokPrompt .err:empty{display:none}
+#tokPrompt input[readonly]{color:var(--muted)}
+#addSheet .radio{margin:0}
+#addSheet .radio input{width:20px;min-height:0;height:20px;padding:0}
+#addSheet .linkbtn{min-height:44px;margin-right:0}

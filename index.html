@@ -164,16 +164,70 @@
   <a href="#products"><b aria-hidden="true">◧</b>Products</a><a href="#reads"><b aria-hidden="true">☰</b>Reads</a><a href="#podcasts"><b aria-hidden="true">♪</b>Podcasts</a>
 </nav>
 
-<button id="gear" type="button" aria-label="Admin sign in" aria-haspopup="dialog">⚙</button>
+<button id="gear" type="button" aria-label="Add to Studio (owner)" aria-haspopup="dialog">⚙</button>
 <div id="adminbar" role="region" aria-label="Admin controls">
   <span>Edit mode</span><span id="dirtyinfo"></span>
   <span class="spacer"></span>
+  <button class="cta ghost btn-sm" id="addOpen" type="button" aria-haspopup="dialog">Add to Studio</button>
   <button class="cta ghost btn-sm" id="lockBtn" type="button">Lock &amp; sign out</button>
   <button class="cta btn-sm" id="publishBtn" type="button">Publish changes</button>
 </div>
 
 <div id="status" role="status" aria-live="polite"></div>
 <div class="modal-bg" id="modalBg"><div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"></div></div>
+
+<div class="modal-bg" id="addBg"><div class="modal sheet" id="addSheet" role="dialog" aria-modal="true" aria-labelledby="addTitle">
+  <form id="addForm" novalidate>
+    <h3 id="addTitle" tabindex="-1">Add to Studio</h3>
+    <p class="muted-sm">Owner tool. Paste a link, choose Read or Podcast, then post. Your token is asked for only when you post.</p>
+    <div class="field"><label for="qa-url">Link</label>
+      <input id="qa-url" name="url" type="text" inputmode="url" autocomplete="off" placeholder="https://…" aria-describedby="qa-dest qa-url-err">
+      <button type="button" class="cta ghost paste-btn" id="qa-paste">Paste from clipboard</button>
+      <div class="muted-xs dest" id="qa-dest"></div>
+      <div class="field-err" id="qa-url-err" role="alert"></div></div>
+    <fieldset class="sect-field" id="qa-kind"><legend>Add as</legend><div class="radios">
+      <label class="radio"><input type="radio" name="qa-kind" value="read" checked> Read</label>
+      <label class="radio"><input type="radio" name="qa-kind" value="podcast"> Podcast</label></div></fieldset>
+    <div class="field"><label for="qa-title">Title</label>
+      <input id="qa-title" name="title" type="text" autocomplete="off" aria-describedby="qa-title-err">
+      <div class="field-err" id="qa-title-err" role="alert"></div></div>
+    <div id="qa-read-fields">
+      <fieldset class="sect-field" id="qa-category" aria-describedby="qa-category-err"><legend>Section</legend><div class="radios" id="qa-section-opts"></div>
+        <div class="field-err" id="qa-category-err" role="alert"></div></fieldset>
+      <div class="field"><label for="qa-type">Type</label>
+        <select id="qa-type" name="type"><option value="article">Article</option><option value="video">Video</option><option value="paper">Paper</option><option value="podcast">Podcast</option><option value="tool">Tool</option></select></div>
+    </div>
+    <div id="qa-pod-fields" hidden>
+      <div class="field"><label for="qa-show">Show <span class="opt">(optional)</span></label>
+        <input id="qa-show" name="show" type="text" autocomplete="off" aria-describedby="qa-show-err">
+        <div class="field-err" id="qa-show-err" role="alert"></div></div>
+    </div>
+    <div class="field"><label for="qa-tags">Tags <span class="opt">(comma separated, up to 5)</span></label>
+      <input id="qa-tags" name="tags" type="text" autocomplete="off" placeholder="ai, architecture"></div>
+    <div class="field"><label for="qa-comment">Your take <span class="opt">(optional)</span></label>
+      <textarea id="qa-comment" name="comment" aria-describedby="qa-count-wrap qa-comment-err" placeholder="Why is this worth it?"></textarea>
+      <div class="help"><span id="qa-comment-err" class="field-err m0" role="alert"></span><span id="qa-count-wrap" aria-live="off"><span id="qa-count">0</span>/280</span></div></div>
+    <div class="err" id="qa-msg" role="alert"></div>
+    <div class="muted-xs" id="qa-note" role="status"></div>
+    <div class="form-btns">
+      <button type="button" class="cta ghost" id="qa-cancel">Cancel</button>
+      <button type="button" class="cta ghost" id="qa-draft">Post as draft</button>
+      <button type="button" class="cta" id="qa-publish">Post and publish</button>
+    </div>
+    <p class="muted-xs"><button class="linkbtn" id="qa-unlock" type="button">Only unlock for editing</button></p>
+  </form>
+</div></div>
+
+<div class="modal-bg" id="tokBg"><div class="modal" id="tokPrompt" role="dialog" aria-modal="true" aria-labelledby="tokTitle">
+  <form id="tokForm" novalidate>
+    <h3 id="tokTitle" tabindex="-1">Unlock to post</h3>
+    <p class="muted-sm">Use the GitHub token for this site. It stays in this tab only and is forgotten when you close it or when a publish succeeds.</p>
+    <label for="tok-user">Username</label><input id="tok-user" name="username" type="text" autocomplete="username" value="studio-admin-sandbox" readonly>
+    <label for="pat">Token</label><input id="pat" name="password" type="password" autocomplete="current-password" placeholder="github_pat_…">
+    <div class="err" id="tok-err" role="alert"></div>
+    <div class="btns"><button type="button" class="cta ghost" id="tok-cancel">Cancel</button><button type="submit" class="cta" id="tok-go">Unlock</button></div>
+  </form>
+</div></div>
 
 <script src="js/safe-lib.js"></script>
 <script src="js/reads-lib.js"></script>
