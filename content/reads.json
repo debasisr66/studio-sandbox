@@ -11,18 +11,6 @@
   ],
   "articles": [
     {
-      "id": 1792751092237,
-      "added": "2026-10-23",
-      "url": "https://www.flightaware.com/live/flight/AIC184",
-      "title": "Flightaware",
-      "comment": "To track flight",
-      "kind": "article",
-      "tags": [
-        "flight-tracking"
-      ],
-      "category": "other"
-    },
-    {
       "id": 1792724162896,
       "added": "2026-10-23",
       "url": "https://www.youtube.com/live/L6-I7fKcEvs?si=RrmBMUNws8owubk-",

@@ -793,7 +793,7 @@ function openAdd() {
   qaRenderSections(defaultSection());
   qaSetKind(d && d.kind ? d.kind : RL.suggestKind(RL.normalizeUrl(qf('url').value)));
   qaClearErrors(); qaCount(); qaDest(); qaBusy(false);
-  $('#qa-unlock').hidden = document.body.classList.contains('admin');
+  $('#qa-unlock').parentElement.hidden = document.body.classList.contains('admin');
   $('#addBg').classList.add('open'); qf('url').focus();
 }
 /* clear = true for Cancel, Escape and success (the draft is dropped); false to keep it (unlock-only) */

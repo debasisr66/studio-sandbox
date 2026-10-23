@@ -278,4 +278,7 @@ body.admin .read-head{padding-right:112px}
 #tokPrompt input[readonly]{color:var(--muted)}
 #addSheet .radio{margin:0}
 #addSheet .radio input{width:20px;min-height:0;height:20px;padding:0}
-#addSheet .linkbtn{min-height:44px;margin-right:0}
+#addSheet .edit-entry{margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+#addSheet .edit-entry .cta{width:100%}
+#addSheet .edit-entry p{margin:6px 0 0;text-align:center}
+#addSheet .edit-entry[hidden]{display:none}
