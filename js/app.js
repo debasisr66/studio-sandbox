@@ -321,7 +321,7 @@ function renderVersion() {
   const r = latestRelease();
   ['#whatsNewBtn', '#versionBtn'].forEach(sel => { $(sel).hidden = !r; });
   if (!r) return;
-  $('#versionBtn').textContent = 'Studio v' + r.version;
+  $('#versionBtn').textContent = 'Studio v' + r.version + (r.date ? ' · ' + fmtDate(r.date) : '');   // the release date doubles as the build date
   $('#versionBtn').setAttribute('aria-label', 'Studio version ' + r.version + ', open What\'s new');
   const unseen = isUnseen();
   $('#wnDot').hidden = !unseen;
