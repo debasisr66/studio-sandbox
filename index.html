@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SANDBOX · Studio by Debasis Ray — learning never ends!</title>
+<meta name="description" content="Studio by Debasis Ray: small, focused software products with release notes, writing and a curated reading list. Learning never ends!">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://api.github.com; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+<link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body id="top">
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Studio by Debasis Ray, back to top"><img class="logo" src="assets/logo.svg" alt="" width="28" height="28"> Studio <small>by Debasis Ray</small></a>
+    <nav class="links" id="navlinks" aria-label="Sections">
+      <a href="#products">Products</a><a href="#updates">Updates</a><a href="#reads">Reads</a><a href="#podcasts">Podcasts</a>
+    </nav>
+    <div class="hdr-actions">
+      <button class="whatsnew" id="whatsNewBtn" type="button" aria-haspopup="dialog" aria-label="What's new" hidden><span class="wn-text" aria-hidden="true">What's new</span><span class="wn-icon" aria-hidden="true">✦</span><span class="wn-dot" id="wnDot" aria-hidden="true" hidden></span></button>
+      <button class="icon-btn" id="theme" type="button" aria-label="Switch theme"><span aria-hidden="true">◐</span></button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero"><div class="wrap">
+    <div class="who">
+      <div class="photo">
+        <img id="profileImg" class="photo-img" alt="Debasis Ray" width="96" height="96" hidden>
+        <span class="photo-mono" id="profileMono" aria-hidden="true">D</span>
+      </div>
+      <div class="who-text">
+        <div class="eyebrow">Studio by Debasis Ray</div>
+        <button class="addbtn" id="changePhoto" type="button" aria-label="Change profile photo">Change photo</button>
+      </div>
+      <input type="file" id="photoFile" accept="image/png,image/jpeg,image/webp" hidden>
+    </div>
+    <h1>Small, focused software, shipped in the open.</h1>
+    <p class="tagline">Learning never ends!</p>
+    <p>Products built and maintained by Debasis Ray. Every release, changelog and download lives here, straight from the source repositories.</p>
+    <a class="cta" href="#products">Explore products <span aria-hidden="true">→</span></a>
+    <a class="cta ghost" href="https://github.com/debasisr66" rel="noopener noreferrer">GitHub<span class="sr"> (opens in a new tab)</span></a>
+  </div></section>
+
+  <noscript><div class="wrap"><div class="notice">This site needs JavaScript to show products and reading lists. The source is at <a href="https://github.com/debasisr66/studio">github.com/debasisr66/studio</a>.</div></div></noscript>
+
+  <section class="block" id="products" aria-labelledby="h-products"><div class="wrap">
+    <div class="sec-head"><h2 id="h-products">Products</h2><span class="sub" id="syncnote"></span></div>
+    <div id="notice"></div>
+    <div class="grid" id="grid" aria-busy="true"><div class="card skel" aria-hidden="true"></div><div class="card skel" aria-hidden="true"></div></div>
+  </div></section>
+
+  <section class="block" id="updates" aria-labelledby="h-updates"><div class="wrap">
+    <div class="sec-head"><h2 id="h-updates">Updates</h2><span class="sub">Latest releases</span></div>
+    <div class="feed" id="updatesFeed"></div>
+  </div></section>
+
+  <section class="block" id="reads" aria-labelledby="h-reads"><div class="wrap">
+    <div class="sec-head"><h2 id="h-reads">Reads</h2><span class="sub">Articles, videos &amp; books worth your time</span></div>
+    <div class="tabs" id="readTabs" role="tablist" aria-label="Reads sections"></div>
+    <div class="two reads" id="readsPanel" role="tabpanel" aria-labelledby="tab-technical">
+      <div>
+        <h3 class="sub-h">Reading list</h3>
+
+        <div class="composer" id="composer">
+          <button class="composer-open" id="composerOpen" type="button" aria-expanded="false" aria-controls="composerForm">
+            <span class="avatar" aria-hidden="true">D</span><span>Share a read…</span>
+          </button>
+          <form id="composerForm" novalidate aria-labelledby="composerTitle">
+            <h4 id="composerTitle" class="sr">Share a read</h4>
+            <div class="field"><label for="cf-url">Link</label>
+              <input id="cf-url" name="url" type="text" inputmode="url" autocomplete="off" placeholder="https://…" aria-describedby="cf-url-err">
+              <div class="field-err" id="cf-url-err" role="alert"></div></div>
+            <div class="field"><label for="cf-title">Title</label>
+              <input id="cf-title" name="title" type="text" autocomplete="off" aria-describedby="cf-title-err">
+              <div class="field-err" id="cf-title-err" role="alert"></div></div>
+            <div class="field"><label for="cf-comment">Your take <span class="opt">(optional)</span></label>
+              <textarea id="cf-comment" name="comment" aria-describedby="cf-comment-help cf-comment-err" placeholder="Why is this worth reading?"></textarea>
+              <div class="help"><span id="cf-comment-err" class="field-err m0" role="alert"></span><span id="cf-comment-help" aria-live="off"><span id="cf-count">0</span>/280</span></div></div>
+            <div class="fields-2">
+              <div class="field"><label for="cf-kind">Type</label>
+                <select id="cf-kind" name="kind"><option value="article">Article</option><option value="video">Video</option><option value="paper">Paper</option><option value="podcast">Podcast</option><option value="tool">Tool</option></select></div>
+              <div class="field"><label for="cf-tags">Tags <span class="opt">(comma separated, up to 5)</span></label>
+                <input id="cf-tags" name="tags" type="text" autocomplete="off" placeholder="ai, architecture"></div>
+            </div>
+            <fieldset class="sect-field" id="cf-category" aria-describedby="cf-category-err"><legend>Section</legend><div class="radios" id="cf-category-opts"></div>
+              <div class="field-err" id="cf-category-err" role="alert"></div></fieldset>
+            <div class="preview" id="cf-preview-wrap"><h4>Preview</h4><div id="cf-preview"></div><p class="muted-xs" id="cf-preview-section"></p></div>
+            <div class="form-btns">
+              <button type="button" class="cta ghost" id="cf-cancel">Cancel</button>
+              <button type="submit" class="cta" id="cf-submit">Post</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="toolbar" id="toolbar" hidden>
+          <input type="search" id="readSearch" aria-label="Search reads" placeholder="Search reads" autocomplete="off">
+          <div class="chips" id="tagChips" role="group" aria-label="Filter by tag"></div>
+        </div>
+        <p class="count" id="readCount" aria-live="polite"></p>
+        <div class="feed" id="articlesFeed"></div>
+      </div>
+      <div>
+        <h3 class="sub-h">Books</h3>
+        <button class="addbtn" id="addBook" type="button">+ Add book</button>
+        <div class="feed" id="booksFeed"></div>
+      </div>
+    </div>
+  </div></section>
+
+  <section class="block" id="podcasts" aria-labelledby="h-podcasts"><div class="wrap">
+    <div class="sec-head"><h2 id="h-podcasts">Podcasts</h2><span class="sub">Shows and episodes worth a listen</span></div>
+
+    <div class="composer" id="podcastComposer">
+      <button class="composer-open" id="podcastComposerOpen" type="button" aria-expanded="false" aria-controls="podcastForm">
+        <span class="avatar" aria-hidden="true">D</span><span>Share a podcast…</span>
+      </button>
+      <form id="podcastForm" novalidate aria-labelledby="podcastFormTitle">
+        <h4 id="podcastFormTitle" class="sr">Share a podcast</h4>
+        <div class="field"><label for="pf-url">Link</label>
+          <input id="pf-url" name="url" type="text" inputmode="url" autocomplete="off" placeholder="https://…" aria-describedby="pf-url-err">
+          <div class="field-err" id="pf-url-err" role="alert"></div></div>
+        <div class="field"><label for="pf-title">Title</label>
+          <input id="pf-title" name="title" type="text" autocomplete="off" aria-describedby="pf-title-err">
+          <div class="field-err" id="pf-title-err" role="alert"></div></div>
+        <div class="fields-2">
+          <div class="field"><label for="pf-show">Show <span class="opt">(optional)</span></label>
+            <input id="pf-show" name="show" type="text" autocomplete="off" aria-describedby="pf-show-err">
+            <div class="field-err" id="pf-show-err" role="alert"></div></div>
+          <div class="field"><label for="pf-tags">Tags <span class="opt">(comma separated, up to 5)</span></label>
+            <input id="pf-tags" name="tags" type="text" autocomplete="off" placeholder="ai, history"></div>
+        </div>
+        <div class="field"><label for="pf-comment">Your take <span class="opt">(optional)</span></label>
+          <textarea id="pf-comment" name="comment" aria-describedby="pf-comment-help pf-comment-err" placeholder="Why is this worth a listen?"></textarea>
+          <div class="help"><span id="pf-comment-err" class="field-err m0" role="alert"></span><span id="pf-comment-help" aria-live="off"><span id="pf-count">0</span>/280</span></div></div>
+        <div class="preview"><h4>Preview</h4><div id="pf-preview"></div></div>
+        <div class="form-btns">
+          <button type="button" class="cta ghost" id="pf-cancel">Cancel</button>
+          <button type="submit" class="cta" id="pf-submit">Post</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="toolbar" id="podcastToolbar" hidden>
+      <input type="search" id="podcastSearch" aria-label="Search podcasts" placeholder="Search podcasts" autocomplete="off">
+      <div class="chips" id="podcastChips" role="group" aria-label="Filter by tag"></div>
+    </div>
+    <p class="count" id="podcastCount" aria-live="polite"></p>
+    <div class="feed" id="podcastFeed"></div>
+  </div></section>
+</main>
+
+<footer><div class="wrap">
+  <span>© <span id="yr"></span> Studio by Debasis Ray · Learning never ends!</span>
+  <span class="mono"><button class="linkbtn" id="versionBtn" type="button" aria-haspopup="dialog" hidden></button><span class="nowrap">Synced from GitHub · <span id="synced">—</span></span></span>
+</div></footer>
+
+<nav class="bottom" id="navbottom" aria-label="Sections">
+  <a href="#products"><b aria-hidden="true">◧</b>Products</a><a href="#reads"><b aria-hidden="true">☰</b>Reads</a><a href="#podcasts"><b aria-hidden="true">♪</b>Podcasts</a>
+</nav>
+
+<button id="gear" type="button" aria-label="Admin sign in" aria-haspopup="dialog">⚙</button>
+<div id="adminbar" role="region" aria-label="Admin controls">
+  <span>Edit mode</span><span id="dirtyinfo"></span>
+  <span class="spacer"></span>
+  <button class="cta ghost btn-sm" id="lockBtn" type="button">Lock &amp; sign out</button>
+  <button class="cta btn-sm" id="publishBtn" type="button">Publish changes</button>
+</div>
+
+<div id="status" role="status" aria-live="polite"></div>
+<div class="modal-bg" id="modalBg"><div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"></div></div>
+
+<script src="js/safe-lib.js"></script>
+<script src="js/reads-lib.js"></script>
+<script src="js/token-store.js"></script>
+<script src="js/image-lib.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

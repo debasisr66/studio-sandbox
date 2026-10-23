@@ -1,0 +1,23 @@
+[
+  {
+    "repo": "debasisr66/PennyExpenseManager",
+    "slug": "penny",
+    "name": "Penny",
+    "tagline": "Personal expense manager — simple, private, offline-first",
+    "category": "Productivity",
+    "featured": true,
+    "hidden": false,
+    "url": "https://debasisr66.github.io/PennyExpenseManager/",
+    "download_asset": "PennyExpenseManager-*.zip"
+  },
+  {
+    "repo": "debasisr66/debasis-web",
+    "slug": "debasis-web",
+    "name": "Debasis Web",
+    "tagline": "Personal site — profile, writing and reading by Debasis Ray",
+    "category": "Information",
+    "url": "https://debasisr66.github.io/debasis-web/",
+    "featured": false,
+    "hidden": false
+  }
+]

@@ -1,0 +1,66 @@
+{
+  "synced_at": "2026-10-19T11:20:24.061Z",
+  "products": {
+    "debasisr66/PennyExpenseManager": {
+      "description": "This is a Penny Expense Manager product (ChatGPT)",
+      "stars": 1,
+      "language": "JavaScript",
+      "topics": [],
+      "pushed_at": "2026-10-19",
+      "html_url": "https://github.com/debasisr66/PennyExpenseManager",
+      "latest_release": {
+        "tag": "v3.2",
+        "name": "Penny 3.2",
+        "body": "# Penny 3.2 release notes\n\n19 October 2026 · Version 3.2.0 · Tag v3.2\n\nPenny 3.2 adds safer ways to start fresh and diagnose problems while keeping the familiar expense workflow. All monetary values remain INR.\n\n## Changes\n\n- Settings for the default budget, saved tags, backups, diagnostics and app reset. Factory/default monthly budget is ₹1,25,000; existing monthly budgets, including zero, are preserved.\n- Delete one selected month (current month initially) or explicitly delete all months. Preview the count/total and confirm; keep budgets and tags.\n- Full reset needs an acknowledgement and typed RESET PENNY. Restore sample expenses/default budget, retain tags, clear logs/debug and disconnect the linked file without overwriting it.\n- Guarded undo restores a bulk change only before a newer edit; atomic writes and revision checks protect stored records.\n- Hindi digits/number words/Hinglish and currency notation, including Rs.50. Exact regression: `spend rs.50 on donation` → ₹50.00 / Other / donation after Use English draft.\n- Explicit valid amount corrections in the English draft now fill Amount. Unchanged ambiguous guesses, multiple amounts and unsafe grouping stay unresolved.\n- Private local errors-only event logs, optional 30-minute debug, session/action search, reviewed export and acknowledged purge. Financial backups exclude diagnostics.\n- Schema-4 JSON/Excel carries saved tags/preferences; importing preferences is opt-in. Mobile reflow, helper-text contrast and unsaved-draft protection improved.\n\n## Verification\n\n633 automated tests passed locally and in the Docker build. This includes the existing regression suite, 250 synthetic Hindi corpus phrases, 0–99 number checks, adversarial financial cases, data-loss/log/privacy checks and base colour contrast checks. Browser verification covered the reported ₹50 phrase, explicit English correction, normal Add/Edit/Delete, reset/undo, responsive widths and diagnostic review. All 13 runtime assets matched tested source hashes.\n\n[Detailed results and evidence](V3.2-TEST-RESULTS.md) · [Plan](plan.md) · [Design](design.md) · [Traceability](TRACEABILITY.md)\n\n## Known limitations\n\n- Real iPhone microphone capture, repeated Hindi/Spanish audio and background/permission behaviour are not verified by desktop typed-transcript tests. Browser/keyboard speech services may require a network connection.\n- The offline language layer is a bounded expense parser, not universal translation. Native-speaker corpus review remains open. Unsupported rupee-plus-paise wording may require explicit correction.\n- Full screen-reader, zoom, real phone keyboard/calendar and uncoached usability acceptance remain open.\n- Docker source builds are verified locally on this Mac. No public GHCR image, AMD64/ARM64 matrix, fresh comprehensive image CVE scan or signed registry release is claimed.\n\nThe owner approved application publication with these limitations disclosed on 19 October 2026. This is not security certification.\n\n## Use and upgrade\n\nOpen https://debasisr66.github.io/PennyExpenseManager/?release=v3.2 and refresh once if an older version remains cached. Back up existing data first. Browser records stay on their origin/profile; use a JSON backup to move between hosted and local copies. Ordinary upgrades preserve saved expenses/budgets; reset happens only through explicit confirmation.\n\nThe GitHub source archive includes Dockerfile, Compose, scripts/penny, source, documentation and tests. Start Docker Desktop, then run `./scripts/penny --start` from the extracted folder; stop with `./scripts/penny --stop`. A prebuilt registry image is not supplied.\n\nFor rollback, use the prior v3.1 source/release in a separate origin/profile and restore an appropriate backup. Do not assume the older app can read schema-4 state in place.\n\n\n## Deployment verified\n\nPublished from commit `fff33cc66f171275c3c6b8aabf168257387bf704`. [GitHub verification](https://github.com/debasisr66/PennyExpenseManager/actions/runs/39218745577) and [Pages deployment](https://github.com/debasisr66/PennyExpenseManager/actions/runs/39218746070) succeeded. All 13 public runtime assets match this source. The exact ₹50 donation phrase also passed in the hosted browser. [Post-deployment verification](https://github.com/debasisr66/PennyExpenseManager/blob/main/DEPLOYMENT-VERIFICATION-v3.2.md) and [public asset hashes](https://github.com/debasisr66/PennyExpenseManager/blob/main/tests/evidence/public-v3.2-assets.json) are recorded in the repository. The seven release downloads are immutable.\n",
+        "published_at": "2026-10-19T07:53:58Z",
+        "download_url": "https://github.com/debasisr66/PennyExpenseManager/releases/tag/v3.2",
+        "assets": [
+          {
+            "name": "Penny-Journey-Map_v2.docx",
+            "download_url": "https://github.com/debasisr66/PennyExpenseManager/releases/download/v3.2/Penny-Journey-Map_v2.docx",
+            "size": 44246
+          },
+          {
+            "name": "Penny-Journey-Map_v2.html",
+            "download_url": "https://github.com/debasisr66/PennyExpenseManager/releases/download/v3.2/Penny-Journey-Map_v2.html",
+            "size": 16368
+          },
+          {
+            "name": "Penny-Release-Scorecard.docx",
+            "download_url": "https://github.com/debasisr66/PennyExpenseManager/releases/download/v3.2/Penny-Release-Scorecard.docx",
+            "size": 38346
+          },
+          {
+            "name": "Penny-Release-Scorecard.html",
+            "download_url": "https://github.com/debasisr66/PennyExpenseManager/releases/download/v3.2/Penny-Release-Scorecard.html",
+            "size": 2244
+          },
+          {
+            "name": "PennyExpenseManager-v3.2.zip",
+            "download_url": "https://github.com/debasisr66/PennyExpenseManager/releases/download/v3.2/PennyExpenseManager-v3.2.zip",
+            "size": 613635
+          },
+          {
+            "name": "PennyExpenseManager-v3.2.zip.sha256",
+            "download_url": "https://github.com/debasisr66/PennyExpenseManager/releases/download/v3.2/PennyExpenseManager-v3.2.zip.sha256",
+            "size": 95
+          },
+          {
+            "name": "V3.2-TEST-RESULTS.md",
+            "download_url": "https://github.com/debasisr66/PennyExpenseManager/releases/download/v3.2/V3.2-TEST-RESULTS.md",
+            "size": 11264
+          }
+        ]
+      }
+    },
+    "debasisr66/debasis-web": {
+      "description": "",
+      "stars": 1,
+      "language": "HTML",
+      "topics": [],
+      "pushed_at": "2026-10-13",
+      "html_url": "https://github.com/debasisr66/debasis-web",
+      "latest_release": null
+    }
+  }
+}

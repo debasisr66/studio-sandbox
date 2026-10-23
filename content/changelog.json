@@ -1,0 +1,81 @@
+{
+  "releases": [
+    {
+      "version": "1.6",
+      "date": "2026-10-22",
+      "title": "Reads now split into Technical and Others",
+      "items": [
+        "Reads has two tabs, Technical and Others, so you can go straight to the kind of reading you want.",
+        "A link ending in #reads/technical or #reads/others opens that tab directly.",
+        "Search and tag filters work inside the tab you are on; each tab shows how many items it holds.",
+        "Books are sorted into the same two tabs.",
+        "Behind the scenes: the automatic checks that guard the site are stricter and were reviewed independently."
+      ]
+    },
+    {
+      "version": "1.5",
+      "date": "2026-10-21",
+      "title": "More dependable product updates",
+      "items": [
+        "If one product fails to update, you are now told, and its last good details stay on the page.",
+        "Hidden or malformed links in published content are now refused before they go live.",
+        "A daily check now also confirms the nightly update has really been running.",
+        "A new runbook explains how to fix every problem the checks can raise."
+      ]
+    },
+    {
+      "version": "1.4",
+      "date": "2026-10-20",
+      "title": "Logo, profile photo and a more private page",
+      "items": [
+        "Studio has its own logo, shown in the header and the browser tab.",
+        "A profile photo can now appear at the top of the page.",
+        "Fonts now load from Studio itself, so no third party sees your visit.",
+        "The header now fits at every window width; it overflowed slightly between phone and tablet sizes.",
+        "More safeguards behind the scenes: a protected main branch, pinned automation and a keep-alive for the nightly updates."
+      ]
+    },
+    {
+      "version": "1.3",
+      "date": "2026-10-19",
+      "title": "Safer sign-in and What's new",
+      "items": [
+        "See what changed with the new What's new button.",
+        "The version now shows at the bottom of every page.",
+        "Admin sign-in is forgotten when the tab closes.",
+        "Tighter security rules for page styling."
+      ]
+    },
+    {
+      "version": "1.2",
+      "date": "2026-10-19",
+      "title": "Reliability",
+      "items": [
+        "Automatic checks on every change and every day to catch problems early.",
+        "Dates show the right day in every timezone.",
+        "Download buttons can point at the right file (Penny now downloads the app, not a document)."
+      ]
+    },
+    {
+      "version": "1.1",
+      "date": "2026-10-19",
+      "title": "Reads and a refreshed look",
+      "items": [
+        "Share a read: a searchable reading list with tag filters, Share on LinkedIn and Copy link.",
+        "Studio by Debasis Ray, learning never ends!",
+        "Easier to use: keyboard friendly, clearer colours, larger touch targets, light and dark themes.",
+        "Phone fix: long release notes no longer push the page sideways and are collapsed."
+      ]
+    },
+    {
+      "version": "1.0",
+      "date": "2026-10-13",
+      "title": "Launch",
+      "items": [
+        "Products pulled live from GitHub with release notes and downloads.",
+        "Updates feed of the latest releases.",
+        "Blog and Books."
+      ]
+    }
+  ]
+}

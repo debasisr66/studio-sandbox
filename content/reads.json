@@ -1,0 +1,103 @@
+{
+  "schema_version": 2,
+  "books": [
+    {
+      "title": "AI Engineering: Building Applications with Foundation Models (Full Colour Indian Edition)",
+      "author": "by Chip Huyen (Author)",
+      "year": "2024-25",
+      "note": "It is a great book. It would give clarity. Of course after this industry and tech changed a lot, but fundamentals count. \nhttps://www.amazon.in/AI-Engineering-Building-Applications-Foundation/dp/9355426666",
+      "category": "technical"
+    }
+  ],
+  "articles": [
+    {
+      "id": 1792724162896,
+      "added": "2026-10-23",
+      "url": "https://www.youtube.com/live/L6-I7fKcEvs?si=RrmBMUNws8owubk-",
+      "title": "Swamiji addressed AI and Intelligence",
+      "comment": "The debate of Vedantic thought and AI intelligence",
+      "kind": "article",
+      "tags": [],
+      "category": "other"
+    },
+    {
+      "id": 1792678134425,
+      "added": "2026-10-22",
+      "url": "https://news.google.com/read/CBMi8gFBVV95cUxNS1RFTTlsbTZQVlpxanFCRldfUWl2LW9MNG5ZVWgzZDVfY3Y3akM3aWwyQ2tZOXEzQV9PSlhUN3Bid2dSNG80MldGYkpiQTVFUjM0eURFOVVRa0tVZnRjRW9lSTBSdW94Z1VwVlZjU3FXUGNrZ3hpNVlfRWJGU21xbWVnV1lZMnVUS0JmRENCd3lSbmpvMEZYTWh4bFJFb1JidC1OY1NyTy1KaUdVX2NFRXJwM0o0T0t2UjJMWjZsZjJaM2dJNzBHWmpGZERGaDRLV0thSS00aEZMaU1HVmxGd0NFQjlOX3BZUzhlWXQ2ak9kd9IB9wFBVV95cUxQcUV6Y2ZTZkJyR1Y2STdZSEhSNnRmaFI4a09VMnR5VVZiSjV1ODVLRlhpN0FVVVdUYmVwRmEyX2xEcFR1QlJFLUxOZ1B3RDVrSW9LblprREFtQ0dwdmpnMzBnS0xDOEc0TERScWNMWjg0WFVlRHo1c3V0UE1fODZwSEh2VzI5UV9YUHptNHJVT09JX05Pd0ZvY3U1bVhqemZSZjdEbUhlUGJZSE95Zl9xUlhhN1JjWXJFaEVHLUhsZVpHMFhMZ2d4RnF6eThnREtleVdOcUVqYThOS2NZVXFQWUJPYUZYeEJvVnhneXZnZXF5SVVsY1JZ?hl=en-IN&gl=IN&ceid=IN%3Aen",
+      "title": "Sensex fall",
+      "comment": "Why sensex fell - analysis",
+      "kind": "article",
+      "tags": [
+        "stock",
+        "investment"
+      ],
+      "category": "other"
+    },
+    {
+      "id": 1792481723533,
+      "added": "2026-10-20",
+      "url": "https://code.claude.com/docs/en/mcp-quickstart",
+      "title": "Connect to MCP servers - Claude",
+      "comment": "Add an MCP server to Claude Code, verify the connection, and find the configuration on disk.\n\nThe Model Context Protocol (MCP) lets Claude Code use tools beyond its built-in set, such as searching an issue tracker, querying a database, or controlling a web browser.",
+      "kind": "article",
+      "category": "technical",
+      "tags": [
+        "ai",
+        "claude"
+      ]
+    },
+    {
+      "id": 1792481607255,
+      "added": "2026-10-20",
+      "url": "https://sukurcf.github.io/resources/cheatsheets/github-copilot-cheatsheet.html",
+      "title": "Copilot Cheatsheet",
+      "comment": "Everything in one place, got it from someone, handy and useful.",
+      "kind": "article",
+      "category": "technical",
+      "tags": [
+        "ai",
+        "copilot"
+      ]
+    },
+    {
+      "id": 1792477883409,
+      "added": "2026-10-20",
+      "url": "https://www.youtube.com/watch?v=qGS9Ghnq1RU",
+      "title": "GPT Realtime 2 - Voice Agent (Soham Ray, Dr. Victor B - 22nd min)",
+      "comment": "How Voice agents are getting better by the day ... and about Tau2 bench!",
+      "kind": "article",
+      "category": "technical",
+      "tags": [
+        "ai",
+        "voice",
+        "agentic"
+      ]
+    },
+    {
+      "id": 1792410227740,
+      "added": "2026-10-19",
+      "url": "https://code.claude.com/docs/en/plugins/mods/overview",
+      "title": "Claude Code Mods - A hook, a control handle to verification and workflow!",
+      "comment": "Add panes, commands, and tool call rules to Claude Code with a mod. See what a mod can do, how to make or install one, and where mods run.\nA mod is a plugin that changes how Claude Code looks and behaves. It’s made of JavaScript or TypeScript event handlers:",
+      "kind": "article",
+      "category": "technical",
+      "tags": [
+        "ai",
+        "claudecode"
+      ]
+    },
+    {
+      "id": 1792407518753,
+      "added": "2026-10-19",
+      "url": "https://claude.com/blog/the-ai-native-sdlc-playbook",
+      "title": "AI Native SDLC - Claude Blog",
+      "comment": "The new norms of AI SDLC, how one would adopt, blend with various harness etc. The SDLC norms are changing fast, need to create a fail proof method",
+      "kind": "article",
+      "category": "technical",
+      "tags": [
+        "ai",
+        "sdlc"
+      ]
+    }
+  ]
+}

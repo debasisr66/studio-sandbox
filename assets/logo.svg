@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Studio logo">
+<rect width="128" height="128" rx="28" fill="#15131F"/>
+<rect x="-7.75" y="-7.75" width="15.50" height="15.50" rx="3.67" fill="#4B35A8" transform="translate(26.50 26.50) rotate(22.5)"/>
+<rect x="-8.83" y="-8.83" width="17.67" height="17.67" rx="3.97" fill="#6E56CF" transform="translate(51.50 26.50) rotate(30.0)"/>
+<rect x="-9.92" y="-9.92" width="19.83" height="19.83" rx="4.28" fill="#8470E0" transform="translate(76.50 26.50) rotate(37.5)"/>
+<rect x="-11.00" y="-11.00" width="22.00" height="22.00" rx="4.58" fill="#F5B544" transform="translate(101.50 26.50) rotate(45.0)"/>
+<rect x="-6.67" y="-6.67" width="13.33" height="13.33" rx="3.37" fill="#3A2E78" transform="translate(26.50 51.50) rotate(15.0)"/>
+<rect x="-7.75" y="-7.75" width="15.50" height="15.50" rx="3.67" fill="#4B35A8" transform="translate(51.50 51.50) rotate(22.5)"/>
+<rect x="-8.83" y="-8.83" width="17.67" height="17.67" rx="3.97" fill="#6E56CF" transform="translate(76.50 51.50) rotate(30.0)"/>
+<rect x="-9.92" y="-9.92" width="19.83" height="19.83" rx="4.28" fill="#8470E0" transform="translate(101.50 51.50) rotate(37.5)"/>
+<rect x="-5.58" y="-5.58" width="11.17" height="11.17" rx="3.06" fill="#2A2250" transform="translate(26.50 76.50) rotate(7.5)"/>
+<rect x="-6.67" y="-6.67" width="13.33" height="13.33" rx="3.37" fill="#3A2E78" transform="translate(51.50 76.50) rotate(15.0)"/>
+<rect x="-7.75" y="-7.75" width="15.50" height="15.50" rx="3.67" fill="#4B35A8" transform="translate(76.50 76.50) rotate(22.5)"/>
+<rect x="-8.83" y="-8.83" width="17.67" height="17.67" rx="3.97" fill="#6E56CF" transform="translate(101.50 76.50) rotate(30.0)"/>
+<rect x="-4.50" y="-4.50" width="9.00" height="9.00" rx="2.76" fill="#2A2250" transform="translate(26.50 101.50) rotate(0.0)"/>
+<rect x="-5.58" y="-5.58" width="11.17" height="11.17" rx="3.06" fill="#2A2250" transform="translate(51.50 101.50) rotate(7.5)"/>
+<rect x="-6.67" y="-6.67" width="13.33" height="13.33" rx="3.37" fill="#3A2E78" transform="translate(76.50 101.50) rotate(15.0)"/>
+<rect x="-7.75" y="-7.75" width="15.50" height="15.50" rx="3.67" fill="#4B35A8" transform="translate(101.50 101.50) rotate(22.5)"/>
+</svg>
