@@ -1,4 +1,17 @@
 {
   "schema_version": 1,
-  "podcasts": []
+  "podcasts": [
+    {
+      "id": 1792765776469,
+      "added": "2026-10-23",
+      "url": "https://www.youtube.com/watch?v=_V_ed5fuexA&t=337s",
+      "title": "The next 50 years - humanity, AI, Power",
+      "show": "https://www.youtube.com/watch?v=_V_ed5fuexA&t=337s",
+      "comment": "AI can already remember more, compute faster and recall better than any human being. It will only get better in the coming years. What happens when it outperforms us at managing our bureaucracies – such as our economic and legal systems – and what does that mean for democracy?",
+      "tags": [
+        "ai",
+        "philosophy"
+      ]
+    }
+  ]
 }
