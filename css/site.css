@@ -282,3 +282,4 @@ body.admin .read-head{padding-right:112px}
 #addSheet .edit-entry .cta{width:100%}
 #addSheet .edit-entry p{margin:6px 0 0;text-align:center}
 #addSheet .edit-entry[hidden]{display:none}
+#addSheet .prefill{margin:0 0 10px;padding:8px 12px;border:1px solid var(--accent);border-radius:8px;background:var(--accent-soft);color:var(--text)}

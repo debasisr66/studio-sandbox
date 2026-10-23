@@ -1,16 +1,4 @@
 {
   "schema_version": 1,
-  "podcasts": [
-    {
-      "id": 1792756019174,
-      "added": "2026-10-23",
-      "url": "https://www.youtube.com/watch?v=_V_ed5fuexA&t=337s",
-      "title": "Yuval Noah Harari",
-      "show": "Podcast from Yuval",
-      "comment": "Listening to a great historian",
-      "tags": [
-        "ai"
-      ]
-    }
-  ]
+  "podcasts": []
 }

@@ -336,6 +336,28 @@
   }
   /* The address that opens the sheet: exactly '#add'. ('#add=...' is Phase B.) */
   function isAddHash(hash) { return hash === '#add'; }
+  /* '#add' or '#add=...' opens the sheet (QA-08, QA-09). */
+  function isAddEntry(hash) { return typeof hash === 'string' && (hash === '#add' || hash.indexOf('#add=') === 0); }
+  /* '#add=<encoded link>[&t=<encoded title>]' (QA-09): null when it is not a prefill address, else { url, title, error, titleError }. Only the keys add and t count; the first of each wins;
+     the link must be an explicit http(s) link that normalizeUrl accepts; a bad title is dropped and the link kept. It only returns values: it never acts on them. */
+  function parseAddHash(hash) {
+    if (typeof hash !== 'string' || hash.indexOf('#add=') !== 0) return null;
+    var out = { url: '', title: '', error: '', titleError: '' }, raw = Object.create(null), dec = function (v) { try { return decodeURIComponent(v); } catch (e) { return null; } };
+    if (hash.length > 8000) { out.error = 'The link in the address was too long to use, so nothing was prefilled.'; return out; }
+    hash.slice(1).split('&').forEach(function (part) {
+      var i = part.indexOf('='), k = i < 0 ? part : part.slice(0, i);
+      if ((k === 'add' || k === 't') && i >= 0 && !(k in raw)) raw[k] = part.slice(i + 1);
+    });
+    var link = dec(raw.add || ''), url = link === null ? null : link.trim();
+    if (url === null || !/^https?:\/\//i.test(url) || url.length > LIMITS.url || !normalizeUrl(url)) { out.error = 'The link in the address could not be used, so nothing was prefilled.'; return out; }
+    out.url = normalizeUrl(url);
+    if ('t' in raw) {
+      var t = dec(raw.t);
+      t = t === null ? null : t.replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ').replace(/\s+/g, ' ').trim();
+      if (t === null || t.length > LIMITS.title) out.titleError = 'The title in the address could not be used and was ignored.'; else out.title = t;
+    }
+    return out;
+  }
   /* The owner-only draft (QA-07): five text fields and nothing else, so a token can never ride along. */
   var DRAFT_MAX = { url: LIMITS.url, title: 2 * LIMITS.title, comment: 2 * LIMITS.comment, tags: 200 };
   function clampDraft(o) {
@@ -379,7 +401,7 @@
     return t.toLocaleDateString('en-GB', o);
   }
 
-  return { KINDS: KINDS, CATEGORIES: CATEGORIES, categoryLabel: categoryLabel, categorySlug: categorySlug, categoryFromHash: categoryFromHash, isReadsHash: isReadsHash, categoryHash: categoryHash, categoryTabs: categoryTabs, defaultCategory: defaultCategory, nextTabIndex: nextTabIndex, DEFAULT_NEW_CATEGORY: DEFAULT_NEW_CATEGORY, categoryOf: categoryOf, categoryCounts: categoryCounts, pickAsset: pickAsset, formatDate: formatDate, LIMITS: LIMITS, normalizeUrl: normalizeUrl, isPublishableUrl: isPublishableUrl, READS_SCHEMA_VERSION: READS_SCHEMA_VERSION, PODCASTS_SCHEMA_VERSION: PODCASTS_SCHEMA_VERSION, PODCAST_LIMITS: PODCAST_LIMITS, isSupportedPodcastsVersion: isSupportedPodcastsVersion, platformOf: platformOf, podcastView: podcastView, validatePodcastEntry: validatePodcastEntry, serializePodcasts: serializePodcasts, validatePodcastsFile: validatePodcastsFile, filterPodcasts: filterPodcasts, podcastTags: podcastTags, redirectHash: redirectHash, extractLink: extractLink, extractTitle: extractTitle, suggestKind: suggestKind, isAddHash: isAddHash, serializeDraft: serializeDraft, parseDraft: parseDraft, isSupportedReadsVersion: isSupportedReadsVersion, serializeReads: serializeReads, domainOf: domainOf, keyOf: keyOf, isDuplicate: isDuplicate,
+  return { KINDS: KINDS, CATEGORIES: CATEGORIES, categoryLabel: categoryLabel, categorySlug: categorySlug, categoryFromHash: categoryFromHash, isReadsHash: isReadsHash, categoryHash: categoryHash, categoryTabs: categoryTabs, defaultCategory: defaultCategory, nextTabIndex: nextTabIndex, DEFAULT_NEW_CATEGORY: DEFAULT_NEW_CATEGORY, categoryOf: categoryOf, categoryCounts: categoryCounts, pickAsset: pickAsset, formatDate: formatDate, LIMITS: LIMITS, normalizeUrl: normalizeUrl, isPublishableUrl: isPublishableUrl, READS_SCHEMA_VERSION: READS_SCHEMA_VERSION, PODCASTS_SCHEMA_VERSION: PODCASTS_SCHEMA_VERSION, PODCAST_LIMITS: PODCAST_LIMITS, isSupportedPodcastsVersion: isSupportedPodcastsVersion, platformOf: platformOf, podcastView: podcastView, validatePodcastEntry: validatePodcastEntry, serializePodcasts: serializePodcasts, validatePodcastsFile: validatePodcastsFile, filterPodcasts: filterPodcasts, podcastTags: podcastTags, redirectHash: redirectHash, extractLink: extractLink, extractTitle: extractTitle, suggestKind: suggestKind, isAddHash: isAddHash, isAddEntry: isAddEntry, parseAddHash: parseAddHash, serializeDraft: serializeDraft, parseDraft: parseDraft, isSupportedReadsVersion: isSupportedReadsVersion, serializeReads: serializeReads, domainOf: domainOf, keyOf: keyOf, isDuplicate: isDuplicate,
     parseTags: parseTags, validateEntry: validateEntry, shareLinks: shareLinks, entryView: entryView,
     filterReads: filterReads, allTags: allTags };
 });
