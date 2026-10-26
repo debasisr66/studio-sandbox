@@ -1,6 +1,19 @@
 {
   "releases": [
     {
+      "version": "2.0",
+      "date": "2026-10-26",
+      "title": "Studio 2.0: a simpler, safer and easier-to-use Studio",
+      "items": [
+        "A full overhaul: one clear order (Products, Updates, Reads, Podcasts) and the same menu on every screen, on phone and desktop.",
+        "Reads has Technical and Others sections with search and tags, and a link can open either one directly. Books sit under the reads.",
+        "The Blog is now Podcasts: shows and episodes worth a listen, each with sharing. Old Blog links still work.",
+        "Easier on a phone and for everyone: bigger tap targets, clear focus, readable contrast, a tighter first screen, and it works at high zoom.",
+        "Safer by design: stricter checks on every link and file, bounded waits, no cookies, no tracking, and nothing about your visit is recorded.",
+        "Behind the scenes: every change is tested in a real browser, and the security-sensitive ones get an independent review."
+      ]
+    },
+    {
       "version": "1.6",
       "date": "2026-10-22",
       "title": "Reads now split into Technical and Others",
