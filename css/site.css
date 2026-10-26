@@ -173,7 +173,8 @@ nav.bottom{display:none}
   .hero h1{margin:8px 0 10px}
   section.block{padding:32px 0}
   html{scroll-padding-bottom:80px}
-  footer{padding-bottom:132px}
+  footer{padding-bottom:88px}
+  footer .wrap{padding-right:72px}
   .brand{min-height:44px;display:inline-flex;align-items:center}
   .card .actions a{min-height:44px}
   details.notes summary{min-height:44px}
