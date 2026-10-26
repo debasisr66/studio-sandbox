@@ -11,6 +11,19 @@
   ],
   "articles": [
     {
+      "id": 1792847204375,
+      "added": "2026-10-24",
+      "url": "https://arxiv.org/pdf/2502.10867",
+      "title": "AI reasoning model working paper",
+      "comment": "How AI model reasoning works",
+      "kind": "article",
+      "tags": [
+        "ai",
+        "reasoning-model"
+      ],
+      "category": "technical"
+    },
+    {
       "id": 1792765025016,
       "added": "2026-10-23",
       "url": "https://www.youtube.com/watch?v=DlEulH-2zcs",
