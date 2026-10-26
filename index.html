@@ -71,6 +71,7 @@
           </button>
           <form id="composerForm" novalidate aria-labelledby="composerTitle">
             <h4 id="composerTitle" class="sr">Share a read</h4>
+            <p class="muted-xs">Podcast links go in <a href="#podcasts">Podcasts</a>.</p>
             <div class="field"><label for="cf-url">Link</label>
               <input id="cf-url" name="url" type="text" inputmode="url" autocomplete="off" placeholder="https://…" aria-describedby="cf-url-err">
               <div class="field-err" id="cf-url-err" role="alert"></div></div>
@@ -82,7 +83,7 @@
               <div class="help"><span id="cf-comment-err" class="field-err m0" role="alert"></span><span id="cf-comment-help" aria-live="off"><span id="cf-count">0</span>/280</span></div></div>
             <div class="fields-2">
               <div class="field"><label for="cf-kind">Type</label>
-                <select id="cf-kind" name="kind"><option value="article">Article</option><option value="video">Video</option><option value="paper">Paper</option><option value="podcast">Podcast</option><option value="tool">Tool</option></select></div>
+                <select id="cf-kind" name="kind"><option value="article">Article</option><option value="video">Video</option><option value="paper">Paper</option><option value="tool">Tool</option></select></div>
               <div class="field"><label for="cf-tags">Tags <span class="opt">(comma separated, up to 5)</span></label>
                 <input id="cf-tags" name="tags" type="text" autocomplete="off" placeholder="ai, architecture"></div>
             </div>
@@ -192,7 +193,7 @@
       <fieldset class="sect-field" id="qa-category" aria-describedby="qa-category-err"><legend>Section</legend><div class="radios" id="qa-section-opts"></div>
         <div class="field-err" id="qa-category-err" role="alert"></div></fieldset>
       <div class="field"><label for="qa-type">Type</label>
-        <select id="qa-type" name="type"><option value="article">Article</option><option value="video">Video</option><option value="paper">Paper</option><option value="podcast">Podcast</option><option value="tool">Tool</option></select></div>
+        <select id="qa-type" name="type"><option value="article">Article</option><option value="video">Video</option><option value="paper">Paper</option><option value="tool">Tool</option></select></div>
     </div>
     <div id="qa-pod-fields" hidden>
       <div class="field"><label for="qa-show">Show <span class="opt">(optional)</span></label>

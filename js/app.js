@@ -475,6 +475,8 @@ function openComposer(editIndex = -1) {
   state.editing = editIndex; state.editEntry = editIndex >= 0 ? state.reads.articles[editIndex] : null;
   const e = editIndex >= 0 ? RL.entryView(state.reads.articles[editIndex]) : {url:'', title:'', comment:'', kind:'article', tags:[]};
   cf('url').value = e.url; cf('title').value = e.title; cf('comment').value = e.comment;
+  cf('kind').querySelectorAll('[data-extra]').forEach(o => o.remove());
+  if (![...cf('kind').options].some(o => o.value === e.kind)) { const o = new Option(RL.KINDS.includes(e.kind) ? e.kind.charAt(0).toUpperCase() + e.kind.slice(1) : e.kind, e.kind); o.dataset.extra = '1'; cf('kind').add(o); }   // an older entry keeps its type (PC-06); the extra option is removed again next time
   cf('kind').value = e.kind; cf('tags').value = e.tags.join(', ');
   renderSectionRadios(editIndex >= 0 ? RL.categoryOf(state.reads.articles[editIndex]) : defaultSection());
   $('#composerTitle').textContent = editIndex >= 0 ? 'Edit read' : 'Share a read';
@@ -583,6 +585,7 @@ $('#podcastForm').addEventListener('submit', ev => {
   if (state.podcastsUnsupported || state.podcastsFailed) return showPodcastErrors({url: 'podcasts.json could not be loaded, or is newer than this page understands. Reload the page before adding.'});
   const r = RL.validatePodcastEntry(podcastValue());
   if (!r.ok) return showPodcastErrors(r.errors);
+  if (RL.isDuplicate(state.podcasts.podcasts, r.value.url, state.pediting >= 0 && state.pEntry ? state.pEntry.id : undefined)) return showPodcastErrors({url: 'This link is already in your podcasts.'});
   if (state.pediting >= 0) {
     const at = state.podcasts.podcasts.indexOf(state.pEntry);
     if (at < 0) return showPodcastErrors({url: 'That podcast was deleted while you were editing. Close this form and start again.'});
@@ -889,6 +892,7 @@ async function qaPost(mode) {
     if (state.podcastsUnsupported || state.podcastsFailed) return qaShowErrors({url: 'podcasts.json could not be loaded, or is newer than this page understands. Reload the page before adding.'});
     const r = RL.validatePodcastEntry({url: qf('url').value, title: qf('title').value, show: qf('show').value, comment: qf('comment').value, tags: qf('tags').value});
     if (!r.ok) return qaShowErrors(r.errors);
+    if (RL.isDuplicate(state.podcasts.podcasts, r.value.url)) return qaShowErrors({url: 'This link is already in your podcasts.'});
     entry = {id: Date.now(), added: today(), ...r.value};
   }
   if (snap[CONTENT_FILES[key][0]] === undefined) { $('#qa-msg').textContent = CONTENT_FILES[key][0] + ': this page has not finished loading it, or it could not be loaded, so nothing was added. Reload the page and try again.'; return; }   // review QA-A N1: boot would replace the lists and the entry would vanish
