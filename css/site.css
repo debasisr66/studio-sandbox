@@ -297,3 +297,15 @@ body.admin .read-head{padding-right:112px}
 #addSheet .edit-entry .cta{width:100%}
 #addSheet .edit-entry p{margin:6px 0 0;text-align:center}
 #addSheet .edit-entry[hidden]{display:none}
+/* extreme zoom (Chrome at 500% is about 256 CSS px wide): the header, the footer and long words give way instead of pushing the page sideways */
+@media (max-width:340px){
+  header.top .wrap{gap:8px;padding:0 10px}
+  .brand{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .hdr-actions{flex:none;gap:6px}
+  .wrap{padding:0 12px}
+  footer .wrap{padding-right:12px}
+  footer .mono,footer .nowrap{white-space:normal;overflow-wrap:anywhere}
+  .versionBtn,#versionBtn{white-space:normal;text-align:left}
+  h1,h2,h3,.read-title,.card h3,.item h3{overflow-wrap:anywhere}
+  .cta{white-space:normal;text-align:center}
+}
