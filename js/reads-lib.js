@@ -26,6 +26,9 @@
   var CATEGORY_LABELS = { technical: 'Technical', other: 'Others' };
   var CATEGORY_SLUGS = { technical: 'technical', other: 'others' };
   var own = function (o, k) { return Object.prototype.hasOwnProperty.call(o, k); };
+  var isObj = function (v) { return v && typeof v === 'object' && !Array.isArray(v); }, isStr = function (v) { return typeof v === 'string'; };
+  var versionMsg = function (f, want, got) { return f + ": schema_version must be " + want + " (this is the version of the file's shape; got " + JSON.stringify(got) + ')'; };
+  var URL_HINT = 'a clean http(s) address (no spaces, control characters or login details)';
   function categoryLabel(c) { return own(CATEGORY_LABELS, c) ? CATEGORY_LABELS[c] : String(c).charAt(0).toUpperCase() + String(c).slice(1); }
   function categorySlug(c) { return own(CATEGORY_SLUGS, c) ? CATEGORY_SLUGS[c] : String(c); }
   function categoryFromSlug(s) {
@@ -251,20 +254,44 @@
     var ok = Object.keys(errors).length === 0;
     return { ok: ok, errors: errors, value: ok ? { url: url, title: title, show: show, comment: comment, tags: parseTags(e.tags) } : null };
   }
+  /* The whole-file rules CI applies to reads.json; validate-site.js delegates here, so the admin check and CI cannot drift apart. */
+  function validateReadsFile(reads) {
+    var errors = [], warnings = [];
+    if (!isObj(reads) || !Array.isArray(reads.articles) || !Array.isArray(reads.books)) return { errors: ['reads.json: needs articles and books arrays'], warnings: warnings };
+    if (reads.schema_version !== READS_SCHEMA_VERSION) errors.push(versionMsg('reads.json', READS_SCHEMA_VERSION, reads.schema_version));
+    var ids = {}, urls = {};
+    reads.articles.forEach(function (a, i) {
+      var at = 'reads.json articles[' + i + ']';
+      if (!isObj(a)) { errors.push(at + ': must be an object'); return; }
+      if (!isStr(a.title) || !a.title.trim()) errors.push(at + ': title is required');
+      var clean = isStr(a.url) ? normalizeUrl(a.url) : null;
+      if (!clean || !isPublishableUrl(a.url)) errors.push(at + ': url must be ' + URL_HINT);
+      else { var k = domainOf(clean) + new URL(clean).pathname.replace(/\/+$/, ''); if (urls[k]) warnings.push(at + ': same link as an earlier read'); urls[k] = true; }
+      if (a.kind !== undefined && KINDS.indexOf(a.kind) < 0) errors.push(at + ': kind must be one of ' + KINDS.join(', '));
+      if (a.tags !== undefined && (!Array.isArray(a.tags) || a.tags.length > LIMITS.tags || a.tags.some(function (t) { return !isStr(t); }))) errors.push(at + ': tags must be an array of at most ' + LIMITS.tags + ' strings');
+      if (a.comment !== undefined && (!isStr(a.comment) || a.comment.length > LIMITS.comment)) errors.push(at + ': comment must be text up to ' + LIMITS.comment + ' characters');
+      if (CATEGORIES.indexOf(a.category) < 0) errors.push(at + ': category must be one of ' + CATEGORIES.join(', '));
+      if (a.added !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(String(a.added))) errors.push(at + ': added must be YYYY-MM-DD');
+      if (a.id !== undefined) { if (own(ids, String(a.id))) errors.push(at + ': duplicate id ' + a.id); ids[String(a.id)] = true; }
+    });
+    reads.books.forEach(function (b, i) {
+      if (!isObj(b) || !isStr(b.title) || !b.title.trim()) errors.push('reads.json books[' + i + ']: title is required');
+      if (isObj(b) && CATEGORIES.indexOf(b.category) < 0) errors.push('reads.json books[' + i + ']: category must be one of ' + CATEGORIES.join(', '));
+    });
+    return { errors: errors, warnings: warnings };
+  }
   /* The whole-file rules CI applies to podcasts.json (SPEC-PC PC-04), kept here so the admin screen runs the very same check before every publish
      (review PC-B). Returns { errors, warnings }; the messages are the rule texts in scripts/validate-site.js RULES. */
   function validatePodcastsFile(file) {
     var errors = [], warnings = [];
-    var isObj = function (v) { return v && typeof v === 'object' && !Array.isArray(v); }, isStr = function (v) { return typeof v === 'string'; };
     if (!isObj(file) || !Array.isArray(file.podcasts)) return { errors: ['podcasts.json: needs a podcasts array'], warnings: warnings };
-    if (!(typeof file.schema_version === 'number' && Math.floor(file.schema_version) === file.schema_version) || file.schema_version !== PODCASTS_SCHEMA_VERSION)
-      errors.push("podcasts.json: schema_version must be " + PODCASTS_SCHEMA_VERSION + " (this is the version of the file's shape; got " + JSON.stringify(file.schema_version) + ')');
-    var ids = {}, links = {}, hint = 'a clean http(s) address (no spaces, control characters or login details)';
+    if (file.schema_version !== PODCASTS_SCHEMA_VERSION) errors.push(versionMsg('podcasts.json', PODCASTS_SCHEMA_VERSION, file.schema_version));
+    var ids = {}, links = {};
     file.podcasts.forEach(function (p, i) {
       var at = 'podcasts.json podcasts[' + i + ']';
       if (!isObj(p)) { errors.push(at + ': must be an object'); return; }
       if (!isStr(p.title) || !p.title.trim() || p.title.length > LIMITS.title) errors.push(at + ': podcast title is required, 1 to ' + LIMITS.title + ' characters');
-      if (!isStr(p.url) || !isPublishableUrl(p.url) || !normalizeUrl(p.url)) errors.push(at + ': podcast url must be ' + hint);
+      if (!isStr(p.url) || !isPublishableUrl(p.url) || !normalizeUrl(p.url)) errors.push(at + ': podcast url must be ' + URL_HINT);
       else { var k = keyOf(p.url); if (links[k]) warnings.push(at + ': same link as an earlier podcast'); links[k] = true; }
       if (p.show !== undefined && (!isStr(p.show) || p.show.length > PODCAST_LIMITS.show)) errors.push(at + ': podcast show must be text up to ' + PODCAST_LIMITS.show + ' characters');
       if (p.comment !== undefined && (!isStr(p.comment) || p.comment.length > LIMITS.comment)) errors.push(at + ': podcast comment must be text up to ' + LIMITS.comment + ' characters');
@@ -379,7 +406,7 @@
     return t.toLocaleDateString('en-GB', o);
   }
 
-  return { KINDS: KINDS, CATEGORIES: CATEGORIES, categoryLabel: categoryLabel, categorySlug: categorySlug, categoryFromHash: categoryFromHash, isReadsHash: isReadsHash, categoryHash: categoryHash, categoryTabs: categoryTabs, defaultCategory: defaultCategory, nextTabIndex: nextTabIndex, DEFAULT_NEW_CATEGORY: DEFAULT_NEW_CATEGORY, categoryOf: categoryOf, categoryCounts: categoryCounts, pickAsset: pickAsset, formatDate: formatDate, LIMITS: LIMITS, normalizeUrl: normalizeUrl, isPublishableUrl: isPublishableUrl, READS_SCHEMA_VERSION: READS_SCHEMA_VERSION, PODCASTS_SCHEMA_VERSION: PODCASTS_SCHEMA_VERSION, PODCAST_LIMITS: PODCAST_LIMITS, isSupportedPodcastsVersion: isSupportedPodcastsVersion, platformOf: platformOf, podcastView: podcastView, validatePodcastEntry: validatePodcastEntry, serializePodcasts: serializePodcasts, validatePodcastsFile: validatePodcastsFile, filterPodcasts: filterPodcasts, podcastTags: podcastTags, redirectHash: redirectHash, extractLink: extractLink, extractTitle: extractTitle, suggestKind: suggestKind, isAddHash: isAddHash, serializeDraft: serializeDraft, parseDraft: parseDraft, isSupportedReadsVersion: isSupportedReadsVersion, serializeReads: serializeReads, domainOf: domainOf, keyOf: keyOf, isDuplicate: isDuplicate,
+  return { KINDS: KINDS, CATEGORIES: CATEGORIES, categoryLabel: categoryLabel, categorySlug: categorySlug, categoryFromHash: categoryFromHash, isReadsHash: isReadsHash, categoryHash: categoryHash, categoryTabs: categoryTabs, defaultCategory: defaultCategory, nextTabIndex: nextTabIndex, DEFAULT_NEW_CATEGORY: DEFAULT_NEW_CATEGORY, categoryOf: categoryOf, categoryCounts: categoryCounts, pickAsset: pickAsset, formatDate: formatDate, LIMITS: LIMITS, normalizeUrl: normalizeUrl, isPublishableUrl: isPublishableUrl, READS_SCHEMA_VERSION: READS_SCHEMA_VERSION, PODCASTS_SCHEMA_VERSION: PODCASTS_SCHEMA_VERSION, PODCAST_LIMITS: PODCAST_LIMITS, isSupportedPodcastsVersion: isSupportedPodcastsVersion, platformOf: platformOf, podcastView: podcastView, validatePodcastEntry: validatePodcastEntry, serializePodcasts: serializePodcasts, validatePodcastsFile: validatePodcastsFile, validateReadsFile: validateReadsFile, filterPodcasts: filterPodcasts, podcastTags: podcastTags, redirectHash: redirectHash, extractLink: extractLink, extractTitle: extractTitle, suggestKind: suggestKind, isAddHash: isAddHash, serializeDraft: serializeDraft, parseDraft: parseDraft, isSupportedReadsVersion: isSupportedReadsVersion, serializeReads: serializeReads, domainOf: domainOf, keyOf: keyOf, isDuplicate: isDuplicate,
     parseTags: parseTags, validateEntry: validateEntry, shareLinks: shareLinks, entryView: entryView,
     filterReads: filterReads, allTags: allTags };
 });

@@ -101,8 +101,8 @@ async function boot() {
   $('#grid').removeAttribute('aria-busy');
   state.cat = RL.categoryFromHash(location.hash) || RL.defaultCategory(RL.categoryCounts(state.reads.articles.concat(state.reads.books)));
   renderAll();
-  if (followBlogLink()) showId('podcasts');
-  else { const s = SECTIONS.find(x => location.hash === '#' + x[0]); if (s) showId(s[0]); }   // UX-04: the page above grew after the browser placed the anchor, so go there again (closed list; any other fragment is left alone)
+  if (followBlogLink()) landOn('podcasts');
+  else { const s = SECTIONS.find(x => location.hash === '#' + x[0]); if (s) landOn(s[0]); }   // UX-04: the page above grew after the browser placed the anchor, so go there again (closed list; any other fragment is left alone)
   if (RL.isReadsHash(location.hash) && location.hash !== '#reads') showReads();   // '#reads/others' matches no element id, so the browser cannot scroll to it
   if (tokenStore.get()) enableAdmin();   // always reached: renderAll never throws
   if (RL.isAddHash(location.hash)) openAdd();   // the Home Screen entry (QA-08)
@@ -208,6 +208,14 @@ function renderTabs(tabs) {
 /* '#reads/others' matches no element id, so the browser cannot scroll to it: bring the section into view ourselves, instantly (smooth scrolling is cancelled by layout changes during load). */
 const showId = id => $('#' + id).scrollIntoView({behavior: 'instant', block: 'start'});
 const showReads = () => showId('reads');
+/* go to a section, and once more when the late fonts and images have moved the layout (only if the visitor has not scrolled since) */
+function landOn(id) {
+  showId(id); let done = false;
+  const stop = () => { done = true; ro.disconnect(); ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach(t => window.removeEventListener(t, stop)); };
+  const ro = new ResizeObserver(() => { if (!done && location.hash === '#' + id) showId(id); });
+  ro.observe(document.body); ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach(t => window.addEventListener(t, stop, {passive: true}));
+  setTimeout(stop, 4000);
+}
 function selectCategory(c, focusTab) {
   if (!RL.CATEGORIES.includes(c)) return;
   state.cat = c; state.filter = {tag: '', q: ''}; $('#readSearch').value = '';
@@ -229,7 +237,7 @@ function renderReads() {
   const rows = mine.filter(x => shown.has(x.e));
 
   const tags = RL.allTags(mine.map(x => x.e));
-  $('#toolbar').hidden = mine.length < 4;
+  $('#toolbar').hidden = mine.length < 2;
   $('#tagChips').innerHTML = tags.length ? [['', 'All'], ...tags.map(t => [t, '#' + t])].map(([t, lab]) =>
     `<button type="button" class="chip" data-filter="${esc(t)}" aria-pressed="${state.filter.tag === t}">${esc(lab)}</button>`).join('') : '';
   $('#readCount').textContent = mine.length && (state.filter.tag || state.filter.q) ? `Showing ${rows.length} of ${mine.length}` : '';
@@ -275,7 +283,7 @@ function renderPodcasts() {
   all.sort((a, b) => { const da = (a.e && a.e.added) || '', db = (b.e && b.e.added) || ''; return da === db ? a.i - b.i : (da < db ? 1 : -1); });   // newest first
   const shown = new Set(RL.filterPodcasts(all.map(x => x.e), state.pfilter)), rows = all.filter(x => shown.has(x.e));
   const tags = RL.podcastTags(all.map(x => x.e)), n = all.length;
-  $('#podcastToolbar').hidden = n < 4;
+  $('#podcastToolbar').hidden = n < 2;
   $('#podcastChips').innerHTML = tags.length ? [['', 'All'], ...tags.map(t => [t, '#' + t])].map(([t, lab]) =>
     `<button type="button" class="chip" data-pfilter="${esc(t)}" aria-pressed="${state.pfilter.tag === t}">${esc(lab)}</button>`).join('') : '';
   $('#podcastCount').textContent = n && (state.pfilter.tag || state.pfilter.q) ? `Showing ${rows.length} of ${n}` : '';
@@ -680,6 +688,10 @@ async function publishContent(key, data) {
   if ((key === 'podcasts' && state.podcastsFailed) || (key === 'reads' && state.readsFailed)) throw new Error('not published: it could not be loaded when this page opened, so its content is unknown (reload the page)');
   if (key === 'podcasts') {   // the same rules CI applies, before anything is written: a bad entry already in the file blocks the publish
     const bad = RL.validatePodcastsFile(data).errors;
+    if (bad.length) throw new Error('not published: ' + bad[0] + (bad.length > 1 ? ` (and ${bad.length - 1} more)` : ''));
+  }
+  if (key === 'reads') {   // the same rules CI applies: an entry already in the file that CI would refuse blocks the publish, with nothing written
+    const bad = RL.validateReadsFile(data).errors;
     if (bad.length) throw new Error('not published: ' + bad[0] + (bad.length > 1 ? ` (and ${bad.length - 1} more)` : ''));
   }
   if ((key === 'podcasts' && state.podcastsUnsupported) || (key === 'reads' && state.readsUnsupported)) throw new Error('not published: this file is newer than the page understands (reload the page)');
