@@ -309,3 +309,15 @@ body.admin .read-head{padding-right:112px}
   h1,h2,h3,.read-title,.card h3,.item h3{overflow-wrap:anywhere}
   .cta{white-space:normal;text-align:center}
 }
+
+/* a phone held sideways (about 375 px high): the hero gives way so the start of Products shows without scrolling (SPEC-UX UX-06) */
+@media (max-height:500px) and (orientation:landscape){
+  .hero{padding:10px 0 6px}
+  .hero p:not(.tagline){display:none}
+  .hero h1{font-size:26px;margin:2px 0 4px;max-width:none}
+  .hero p.tagline{margin:0 0 8px}
+  .photo,.photo-img,.photo-mono{width:40px;height:40px}.photo-mono{font-size:18px}
+  .who{margin-bottom:0}
+  section.block{padding:20px 0}
+  .sec-head{margin-bottom:12px}
+}
