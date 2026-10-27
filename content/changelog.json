@@ -1,6 +1,18 @@
 {
   "releases": [
     {
+      "version": "2.1",
+      "date": "2026-10-27",
+      "title": "Studio 2.1: an owner status line and small fixes",
+      "items": [
+        "New: a short status line near the top, where the owner shares how Studio is doing, what comes next, and when it was last updated.",
+        "Search and tag filters now also show in Others, and in any list with two or more entries.",
+        "On a phone held sideways, the start of Products now shows without scrolling.",
+        "Links to a section now stay on target even when fonts or images load late.",
+        "Behind the scenes: publishing the reading list is checked as strictly as the site checks, and a failing main branch now raises an alarm by email."
+      ]
+    },
+    {
       "version": "2.0",
       "date": "2026-10-26",
       "title": "Studio 2.0: a simpler, safer and easier-to-use Studio",
