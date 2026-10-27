@@ -40,7 +40,7 @@ nav.links a:hover,nav.links a[aria-current]{color:var(--text);background:var(--s
 .icon-btn:hover{color:var(--text);background:var(--surface-2)}
 
 /* hero */
-.hero{padding:48px 0 32px;position:relative;overflow:hidden}
+.hero{padding:40px 0 24px;position:relative;overflow:hidden}
 .hero::before{content:"";position:absolute;inset:-40% -10% auto -10%;height:420px;background:radial-gradient(60% 60% at 50% 0,var(--accent-soft),transparent 70%);pointer-events:none}
 .eyebrow{font:500 12px var(--mono);color:var(--accent-hover);letter-spacing:.08em;text-transform:uppercase}
 .hero h1{font-size:clamp(32px,5vw,52px);line-height:1.05;letter-spacing:-.035em;margin:12px 0 14px;max-width:20ch;font-weight:700}
@@ -168,7 +168,7 @@ nav.bottom{display:none}
   nav.links{display:none}
   .icon-btn{width:44px;height:44px}
   header.top .wrap{justify-content:space-between}
-  .hero{padding:24px 0 20px}
+  .hero{padding:20px 0 14px}
   .hero p{font-size:16px;margin-bottom:16px}
   .hero h1{margin:8px 0 10px}
   section.block{padding:32px 0}
@@ -318,6 +318,15 @@ body.admin .read-head{padding-right:112px}
   .hero p.tagline{margin:0 0 8px}
   .photo,.photo-img,.photo-mono{width:40px;height:40px}.photo-mono{font-size:18px}
   .who{margin-bottom:0}
+  .owner-status{margin-top:4px;font-size:12px}
   section.block{padding:20px 0}
   .sec-head{margin-bottom:12px}
 }
+
+/* owner status line (SPEC-ST): one quiet line under the hero buttons; wraps on a phone */
+.owner-status{display:flex;flex-wrap:wrap;gap:0 12px;margin-top:12px;color:var(--muted);font-size:13px;line-height:1.5}
+.owner-status[hidden]{display:none}
+.owner-status b{color:var(--text);font-weight:600;margin-right:2px}
+.owner-status .st-item::after{content:"·";margin-left:12px;color:var(--muted)}   /* after, so a wrapped line never starts with a dot */
+.owner-status .st-date{font:12px var(--mono);overflow-wrap:anywhere}
+@media (max-width:340px){.owner-status{gap:2px 10px;font-size:13px}.owner-status .st-item,.owner-status .st-date{overflow-wrap:anywhere}}

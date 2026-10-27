@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "updated": "2026-10-27",
+  "items": [
+    {
+      "label": "Studio",
+      "value": "Steady"
+    },
+    {
+      "label": "Next",
+      "value": "Incubating"
+    },
+    {
+      "label": "Owner",
+      "value": "Thinking"
+    }
+  ]
+}

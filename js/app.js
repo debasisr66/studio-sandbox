@@ -68,9 +68,9 @@ const loadJson = path => window.SafeLib.fetchJson(fetch, path + '?t=' + Date.now
 
 async function boot() {
   $('#yr').textContent = new Date().getFullYear();
-  const [reg, cache, podcasts, reads, changelog, profile] = await Promise.allSettled([
+  const [reg, cache, podcasts, reads, changelog, profile, status] = await Promise.allSettled([
     loadJson('content/products.json'), loadJson('content/cache.json'),
-    loadJson('content/podcasts.json'), loadJson('content/reads.json'), loadJson('content/changelog.json'), loadJson('content/profile.json')]);
+    loadJson('content/podcasts.json'), loadJson('content/reads.json'), loadJson('content/changelog.json'), loadJson('content/profile.json'), loadJson('content/status.json')]);
   // a file that loaded as JSON `null` or a bare value must not abort boot: only objects are used
   const obj = r => (r.status === 'fulfilled' && r.value && typeof r.value === 'object') ? r.value : null;
   // 404 = the file does not exist yet (an empty list); any other failure (timeout, 5xx, malformed JSON, a bare `null`) means the content is unknown, so nothing may be published over it
@@ -79,6 +79,7 @@ async function boot() {
   state.readsFailed = unknown(reads); state.podcastsFailed = unknown(podcasts) || (obj(podcasts) !== null && !Array.isArray(obj(podcasts).podcasts) && RL.isSupportedPodcastsVersion(obj(podcasts).schema_version));
   const vProfile = obj(profile), vCache = obj(cache), vPods = obj(podcasts), vReads = obj(reads), vLog = obj(changelog);
   if (vProfile) state.profile = vProfile;
+  state.status = obj(status);   // optional: a missing or bad file just means no status line
   if (reg.status === 'fulfilled' && Array.isArray(reg.value)) state.registry = reg.value;
   if (vCache && typeof vCache.products === 'object') state.cache = vCache;
   snap['content/podcasts.json'] = vPods ? JSON.stringify(vPods) : notFound(podcasts) ? 'absent' : undefined;
@@ -312,7 +313,7 @@ function renderProfile() {
 const SECTION_BOX = { products: ['#grid'], updates: ['#updatesFeed'], podcasts: ['#podcastFeed'], reads: ['#articlesFeed', '#booksFeed'] };
 function renderAll() {
   window.SafeLib.runGuarded([
-    { name: 'products', run: renderProducts }, { name: 'updates', run: renderUpdates }, { name: 'reads', run: renderReads }, { name: 'podcasts', run: renderPodcasts }, { name: 'version', run: renderVersion }, { name: 'profile', run: renderProfile },
+    { name: 'products', run: renderProducts }, { name: 'updates', run: renderUpdates }, { name: 'reads', run: renderReads }, { name: 'podcasts', run: renderPodcasts }, { name: 'status', run: renderStatus }, { name: 'version', run: renderVersion }, { name: 'profile', run: renderProfile },
   ], (name, err) => {
     console.error('Studio: the ' + name + ' section failed to render', err);
     (SECTION_BOX[name] || []).forEach((sel, i) => { const el = $(sel); if (el) el.innerHTML = i === 0 ? window.SafeLib.fallbackHtml() : ''; });
@@ -324,6 +325,18 @@ function renderAll() {
 const storageOk = (() => { try { localStorage.setItem('__probe', '1'); localStorage.removeItem('__probe'); return true; } catch { return false; } })();
 const latestRelease = () => (state.changelog && state.changelog[0]) || null;
 const isUnseen = () => !!latestRelease() && storageOk && lsGet(SEEN_KEY) !== latestRelease().version;
+
+/* The owner status line (SPEC-ST): only what RL.statusView accepts, and only as text. */
+function renderStatus() {
+  const el = $('#ownerStatus'), v = RL.statusView(state.status);
+  el.textContent = ''; el.hidden = !v;
+  if (!v) return;
+  v.items.forEach((it, i) => {
+    const span = document.createElement('span'), b = document.createElement('b');
+    b.textContent = it.label; span.className = 'st-item'; span.append(b, ' ' + it.value); el.append(span);
+  });
+  const d = document.createElement('span'); d.className = 'st-date'; d.textContent = 'as of ' + fmtDate(v.updated); el.append(d);
+}
 
 function renderVersion() {
   const r = latestRelease();
