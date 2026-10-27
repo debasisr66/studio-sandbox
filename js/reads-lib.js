@@ -1,4 +1,4 @@
-/* Pure helpers for the Reads feature. No DOM access, so Node can test them (UMD). */
+/* Pure helpers for the Reads feature and the shared basics (links, limits, versions). No DOM access, so Node can test them (UMD). The podcast, status and Quick add helpers are in js/podcast-lib.js, js/status-lib.js and js/quickadd-lib.js, which add themselves to this interface. */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
   else root.ReadsLib = factory();
@@ -213,73 +213,6 @@
     return Object.keys(count).sort(function (a, b) { return count[b] - count[a] || (a < b ? -1 : 1); });
   }
 
-  /* Podcasts (SPEC-PC PC-01). Version of the shape of content/podcasts.json; same tolerance rule as reads (missing or older is fine, newer is refused). */
-  var PODCASTS_SCHEMA_VERSION = 1;
-  var PODCAST_LIMITS = { show: 80 };   // title, comment and tags share LIMITS with Reads
-  function isSupportedPodcastsVersion(v) {
-    return !(typeof v === 'number' && isFinite(v) && Math.floor(v) === v && v > PODCASTS_SCHEMA_VERSION);
-  }
-  /* Closed list keyed on the host: the host itself or a subdomain of it (never a substring, so evilspotify.com is not Spotify). */
-  var PLATFORMS = [['spotify.com', 'Spotify'], ['podcasts.apple.com', 'Apple Podcasts'], ['youtube.com', 'YouTube'], ['youtu.be', 'YouTube']];
-  /* Label for a card: a platform name, else the plain domain (text only, escaped by the page). '' when the URL is unusable. */
-  function platformOf(url) {
-    var n = normalizeUrl(url);
-    if (!n) return '';
-    var host = new URL(n).hostname.toLowerCase();
-    for (var i = 0; i < PLATFORMS.length; i++) {
-      var d = PLATFORMS[i][0];
-      if (host === d || host.slice(-d.length - 1) === '.' + d) return PLATFORMS[i][1];
-    }
-    return host.replace(/^www\./, '');
-  }
-  /* One shape for rendering, whatever optional fields are missing. */
-  function podcastView(e) {
-    e = e && typeof e === 'object' ? e : {};
-    var s = function (v) { return typeof v === 'string' ? v : ''; };
-    return { title: s(e.title), url: s(e.url), show: s(e.show), comment: s(e.comment), tags: Array.isArray(e.tags) ? e.tags : [], added: s(e.added), platform: platformOf(e.url) };
-  }
-
-  /* What the owner may publish for a podcast (SPEC-PC PC-03): link and title required; show, take and tags optional. Same strict link rule as Reads. */
-  function validatePodcastEntry(e) {
-    e = e || {};
-    var errors = {}, url = normalizeUrl(e.url);
-    if (!url) errors.url = 'Enter a valid web address starting with http:// or https://';
-    var title = String(e.title == null ? '' : e.title).trim();
-    if (!title) errors.title = 'Add a title';
-    else if (title.length > LIMITS.title) errors.title = 'Keep the title under ' + LIMITS.title + ' characters';
-    var show = String(e.show == null ? '' : e.show).trim();
-    if (show.length > PODCAST_LIMITS.show) errors.show = 'Keep the show name under ' + PODCAST_LIMITS.show + ' characters';
-    var comment = String(e.comment == null ? '' : e.comment).trim();
-    if (comment.length > LIMITS.comment) errors.comment = 'Keep your take under ' + LIMITS.comment + ' characters';
-    var ok = Object.keys(errors).length === 0;
-    return { ok: ok, errors: errors, value: ok ? { url: url, title: title, show: show, comment: comment, tags: parseTags(e.tags) } : null };
-  }
-  /* The owner status line (SPEC-ST): the rules CI applies to content/status.json, and the same rules decide what the page may show. now is a time in ms. */
-  var STATUS_LIMITS = { items: 4, label: 20, value: 40 };
-  function validateStatusFile(file, now) {
-    var errors = [], plain = function (s) { return !/[<>]|https?:|www\./i.test(s); };
-    if (!isObj(file)) return { errors: ['status.json: must be an object'], warnings: [] };
-    if (file.schema_version !== 1) errors.push(versionMsg('status.json', 1, file.schema_version));
-    var u = file.updated, d = isStr(u) ? new Date(u + 'T00:00:00Z') : null, ok = !!d && !isNaN(d) && /^\d{4}-\d{2}-\d{2}$/.test(u) && d.toISOString().slice(0, 10) === u;
-    if (!ok) errors.push('status.json: updated must be a real date, YYYY-MM-DD');
-    else if (Date.parse(u + 'T00:00:00Z') > now + 864e5) errors.push('status.json: updated (' + u + ') is in the future');
-    if (!Array.isArray(file.items) || file.items.length < 1 || file.items.length > STATUS_LIMITS.items) errors.push('status.json: items must be a list of 1 to ' + STATUS_LIMITS.items + ' entries');
-    else file.items.forEach(function (it, i) {
-      var at = 'status.json items[' + i + ']';
-      if (!isObj(it)) { errors.push(at + ': must be an object'); return; }
-      ['label', 'value'].forEach(function (k) {
-        var v = it[k];
-        if (!isStr(v) || !v.trim() || v.trim().length > STATUS_LIMITS[k]) errors.push(at + ': ' + k + ' must be text of 1 to ' + STATUS_LIMITS[k] + ' characters');
-        else if (!plain(v)) errors.push(at + ': ' + k + ' must be plain text (no markup, links or www)');
-      });
-    });
-    return { errors: errors, warnings: [] };
-  }
-  /* What the page may show: null for anything CI would refuse, otherwise trimmed items and the date. */
-  function statusView(file) {
-    if (validateStatusFile(file, Date.now()).errors.length) return null;
-    return { items: file.items.map(function (it) { return { label: it.label.trim(), value: it.value.trim() }; }), updated: file.updated };
-  }
   /* The whole-file rules CI applies to reads.json; validate-site.js delegates here, so the admin check and CI cannot drift apart. */
   function validateReadsFile(reads) {
     var errors = [], warnings = [];
@@ -306,111 +239,6 @@
     });
     return { errors: errors, warnings: warnings };
   }
-  /* The whole-file rules CI applies to podcasts.json (SPEC-PC PC-04), kept here so the admin screen runs the very same check before every publish
-     (review PC-B). Returns { errors, warnings }; the messages are the rule texts in scripts/validate-site.js RULES. */
-  function validatePodcastsFile(file) {
-    var errors = [], warnings = [];
-    if (!isObj(file) || !Array.isArray(file.podcasts)) return { errors: ['podcasts.json: needs a podcasts array'], warnings: warnings };
-    if (file.schema_version !== PODCASTS_SCHEMA_VERSION) errors.push(versionMsg('podcasts.json', PODCASTS_SCHEMA_VERSION, file.schema_version));
-    var ids = {}, links = {};
-    file.podcasts.forEach(function (p, i) {
-      var at = 'podcasts.json podcasts[' + i + ']';
-      if (!isObj(p)) { errors.push(at + ': must be an object'); return; }
-      if (!isStr(p.title) || !p.title.trim() || p.title.length > LIMITS.title) errors.push(at + ': podcast title is required, 1 to ' + LIMITS.title + ' characters');
-      if (!isStr(p.url) || !isPublishableUrl(p.url) || !normalizeUrl(p.url)) errors.push(at + ': podcast url must be ' + URL_HINT);
-      else { var k = keyOf(p.url); if (links[k]) warnings.push(at + ': same link as an earlier podcast'); links[k] = true; }
-      if (p.show !== undefined && (!isStr(p.show) || p.show.length > PODCAST_LIMITS.show)) errors.push(at + ': podcast show must be text up to ' + PODCAST_LIMITS.show + ' characters');
-      if (p.comment !== undefined && (!isStr(p.comment) || p.comment.length > LIMITS.comment)) errors.push(at + ': podcast comment must be text up to ' + LIMITS.comment + ' characters');
-      if (p.tags !== undefined && (!Array.isArray(p.tags) || p.tags.length > LIMITS.tags || p.tags.some(function (t) { return !isStr(t) || t.length > LIMITS.tag; }))) errors.push(at + ': podcast tags must be an array of at most ' + LIMITS.tags + ' strings, each up to ' + LIMITS.tag + ' characters');
-      if (p.added !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(String(p.added))) errors.push(at + ': added must be YYYY-MM-DD');
-      if (p.id !== undefined) { if (own(ids, String(p.id))) errors.push(at + ': podcast duplicate id ' + p.id); ids[String(p.id)] = true; }
-    });
-    return { errors: errors, warnings: warnings };
-  }
-  /* What the admin writes to podcasts.json: the version first, then the list; always the current version (a publish never drops the key). */
-  function serializePodcasts(p) {
-    return { schema_version: PODCASTS_SCHEMA_VERSION, podcasts: p && Array.isArray(p.podcasts) ? p.podcasts : [] };
-  }
-  function filterPodcasts(list, opts) {
-    opts = opts || {};
-    var q = String(opts.q || '').trim().toLowerCase();
-    return (list || []).filter(function (e) {
-      var v = podcastView(e);
-      if (opts.tag && v.tags.indexOf(opts.tag) < 0) return false;
-      if (!q) return true;
-      return (v.title + ' ' + v.show + ' ' + v.comment + ' ' + v.url + ' ' + v.platform + ' ' + v.tags.join(' ')).toLowerCase().indexOf(q) >= 0;
-    });
-  }
-  function podcastTags(list) {
-    var count = Object.create(null);
-    (list || []).forEach(function (e) { podcastView(e).tags.forEach(function (t) { count[t] = (count[t] || 0) + 1; }); });
-    return Object.keys(count).sort(function (a, b) { return count[b] - count[a] || (a < b ? -1 : 1); });
-  }
-  /* The retired blog's links: '#blog' and '#blog/anything' go to '#podcasts' (SPEC-PC PC-05). '' for any other hash. */
-  function redirectHash(hash) { return typeof hash === 'string' && /^#blog(\/.*)?$/.test(hash) ? '#podcasts' : ''; }
-
-  /* Quick add (SPEC-QA QA-02, QA-03, QA-07, QA-08): helpers for the Add to Studio sheet. Pure, bounded, never throw. */
-  var SCAN_MAX = 20000;   // only this much of a pasted text is looked at
-  /* trailing punctuation is not part of a link; a closing bracket stays only when its opener is inside the link (Wikipedia-style addresses) */
-  function trimLink(s) {
-    var pair = { ')': '(', ']': '[', '}': '{' }, n = { '(': 0, '[': 0, '{': 0, ')': 0, ']': 0, '}': 0 }, i;
-    for (i = 0; i < s.length; i++) { var c = s.charAt(i); if (own(n, c)) n[c]++; }   // counted once, so trimming stays linear
-    for (;;) {
-      var last = s.charAt(s.length - 1);
-      if (last && '.,;:!?\'"*_>'.indexOf(last) >= 0) { s = s.slice(0, -1); continue; }
-      if (own(pair, last) && n[last] > n[pair[last]]) { n[last]--; s = s.slice(0, -1); continue; }
-      return s;
-    }
-  }
-  /* The first usable http(s) link in whatever was pasted (share text, a bare link, Markdown), normalised exactly as a typed link is; null when there is none. */
-  function extractLink(text) {
-    if (typeof text !== 'string' || !text) return null;
-    var s = text.length > SCAN_MAX ? text.slice(0, SCAN_MAX) : text, re = /https?:\/\/[^\s<>"'`\u0000-\u001f\u007f-\u009f]+/gi, m;
-    while ((m = re.exec(s)) !== null) { var n = normalizeUrl(trimLink(m[0])); if (n) return n; }
-    return null;
-  }
-  /* The title line of share text ("Title", newline, link): the first line that is more than the link, cleaned; '' when there is none or no link. */
-  function extractTitle(text) {
-    if (typeof text !== 'string' || !text) return '';
-    var s = text.length > SCAN_MAX ? text.slice(0, SCAN_MAX) : text;
-    if (!/https?:\/\//i.test(s)) return '';
-    var lines = s.split(/\r\n|\r|\n/);
-    for (var i = 0; i < lines.length; i++) {
-      var l = lines[i].replace(/https?:\/\/\S*/gi, ' ').replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ').replace(/\s+/g, ' ').trim();
-      l = l.replace(/^[\s"'“”‘’*|:•–—-]+|[\s"'“”‘’*|:•–—-]+$/g, '');
-      if (l) return l.length > LIMITS.title ? l.slice(0, LIMITS.title).trim() : l;
-    }
-    return '';
-  }
-  /* 'podcast' for Spotify and Apple Podcasts links (by host, never by substring), 'read' for everything else, including unusable input. */
-  function suggestKind(url) {
-    var p = platformOf(url);
-    return p === 'Spotify' || p === 'Apple Podcasts' ? 'podcast' : 'read';
-  }
-  /* The address that opens the sheet: exactly '#add'. ('#add=...' is Phase B.) */
-  function isAddHash(hash) { return hash === '#add'; }
-  /* The owner-only draft (QA-07): five text fields and nothing else, so a token can never ride along. */
-  var DRAFT_MAX = { url: LIMITS.url, title: 2 * LIMITS.title, comment: 2 * LIMITS.comment, tags: 200 };
-  function clampDraft(o) {
-    var out = { url: '', title: '', comment: '', tags: '', kind: '' };
-    if (!o || typeof o !== 'object' || Array.isArray(o)) return out;
-    Object.keys(DRAFT_MAX).forEach(function (k) { var v = own(o, k) ? o[k] : undefined; if (typeof v === 'string') out[k] = v.slice(0, DRAFT_MAX[k]); });
-    if (own(o, 'kind') && (o.kind === 'read' || o.kind === 'podcast')) out.kind = o.kind;
-    return out;
-  }
-  function serializeDraft(o) {
-    var d = clampDraft(o);
-    var any = ['url', 'title', 'comment', 'tags'].some(function (k) { return d[k].trim() !== ''; });
-    return any ? JSON.stringify(d) : '';
-  }
-  function parseDraft(raw) {
-    if (typeof raw !== 'string' || !raw || raw.length > 20000) return null;
-    var o; try { o = JSON.parse(raw); } catch (e) { return null; }
-    if (!o || typeof o !== 'object' || Array.isArray(o)) return null;
-    var d = clampDraft(o);
-    return ['url', 'title', 'comment', 'tags'].some(function (k) { return d[k].trim() !== ''; }) ? d : null;
-  }
-
   /* Chooses the release file for a card's Download button (used by the products grid, not Reads).
      pattern: optional wildcard such as "PennyExpenseManager-*.zip" ('*' = any characters, case-insensitive).
      No pattern -> first asset (previous behavior). Pattern with no match -> null, so the card falls back
@@ -432,7 +260,9 @@
     return t.toLocaleDateString('en-GB', o);
   }
 
-  return { KINDS: KINDS, CATEGORIES: CATEGORIES, categoryLabel: categoryLabel, categorySlug: categorySlug, categoryFromHash: categoryFromHash, isReadsHash: isReadsHash, categoryHash: categoryHash, categoryTabs: categoryTabs, defaultCategory: defaultCategory, nextTabIndex: nextTabIndex, DEFAULT_NEW_CATEGORY: DEFAULT_NEW_CATEGORY, categoryOf: categoryOf, categoryCounts: categoryCounts, pickAsset: pickAsset, formatDate: formatDate, LIMITS: LIMITS, normalizeUrl: normalizeUrl, isPublishableUrl: isPublishableUrl, READS_SCHEMA_VERSION: READS_SCHEMA_VERSION, PODCASTS_SCHEMA_VERSION: PODCASTS_SCHEMA_VERSION, PODCAST_LIMITS: PODCAST_LIMITS, isSupportedPodcastsVersion: isSupportedPodcastsVersion, platformOf: platformOf, podcastView: podcastView, validatePodcastEntry: validatePodcastEntry, serializePodcasts: serializePodcasts, validatePodcastsFile: validatePodcastsFile, validateReadsFile: validateReadsFile, validateStatusFile: validateStatusFile, statusView: statusView, filterPodcasts: filterPodcasts, podcastTags: podcastTags, redirectHash: redirectHash, extractLink: extractLink, extractTitle: extractTitle, suggestKind: suggestKind, isAddHash: isAddHash, serializeDraft: serializeDraft, parseDraft: parseDraft, isSupportedReadsVersion: isSupportedReadsVersion, serializeReads: serializeReads, domainOf: domainOf, keyOf: keyOf, isDuplicate: isDuplicate,
-    parseTags: parseTags, validateEntry: validateEntry, shareLinks: shareLinks, entryView: entryView,
-    filterReads: filterReads, allTags: allTags };
+  var api = { KINDS: KINDS, CATEGORIES: CATEGORIES, categoryLabel: categoryLabel, categorySlug: categorySlug, categoryFromHash: categoryFromHash, isReadsHash: isReadsHash, categoryHash: categoryHash, categoryTabs: categoryTabs, defaultCategory: defaultCategory, nextTabIndex: nextTabIndex, DEFAULT_NEW_CATEGORY: DEFAULT_NEW_CATEGORY, categoryOf: categoryOf, categoryCounts: categoryCounts, pickAsset: pickAsset, formatDate: formatDate, LIMITS: LIMITS, normalizeUrl: normalizeUrl, isPublishableUrl: isPublishableUrl, READS_SCHEMA_VERSION: READS_SCHEMA_VERSION, validateReadsFile: validateReadsFile, isSupportedReadsVersion: isSupportedReadsVersion, serializeReads: serializeReads, domainOf: domainOf, keyOf: keyOf, isDuplicate: isDuplicate, parseTags: parseTags, validateEntry: validateEntry, shareLinks: shareLinks, entryView: entryView, filterReads: filterReads, allTags: allTags };
+  /* Shared helpers for the parts (podcast-lib.js, status-lib.js, quickadd-lib.js); not for the page. */
+  api._h = { LIMITS: LIMITS, URL_HINT: URL_HINT, isObj: isObj, isPublishableUrl: isPublishableUrl, isStr: isStr, keyOf: keyOf, normalizeUrl: normalizeUrl, own: own, parseTags: parseTags, versionMsg: versionMsg };
+  if (typeof module === 'object' && module.exports) { require('./podcast-lib.js')(api); require('./status-lib.js')(api); require('./quickadd-lib.js')(api); }
+  return api;
 });
